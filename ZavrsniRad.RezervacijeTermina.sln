@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31729.503
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZavrsniRad.RezervacijeTermina", "ZavrsniRad.RezervacijeTermina\ZavrsniRad.RezervacijeTermina.csproj", "{F44A65FB-F9D1-4D06-92F6-9CEAD433BA8E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F44A65FB-F9D1-4D06-92F6-9CEAD433BA8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F44A65FB-F9D1-4D06-92F6-9CEAD433BA8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F44A65FB-F9D1-4D06-92F6-9CEAD433BA8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F44A65FB-F9D1-4D06-92F6-9CEAD433BA8E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {549ABEB1-F7D6-42B3-B736-6F24C24A9284}
+	EndGlobalSection
+EndGlobal
