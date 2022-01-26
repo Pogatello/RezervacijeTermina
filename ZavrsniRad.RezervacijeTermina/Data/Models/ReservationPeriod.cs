@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace ZavrsniRad.RezervacijeTermina.Data.Models
 {
@@ -7,10 +8,13 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 	{
 		#region Properties
 
+		[Key]
 		public long Id { get; private set; }
 
+		[Required]
 		public DateTime From { get; private set; }
 
+		[Required]
 		public DateTime To { get; private set; }
 
 		public bool IsConfirmed { get; private set; }
@@ -21,7 +25,13 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 
 		#region Navigation Properties
 
-		public IdentityUser User { get; set; }
+		public string UserId { get; private set; }
+
+		public IdentityUser User { get; private set; }
+
+		public long ReservationEventId { get; private set; }
+
+		public ReservationEvent ReservationEvent { get; private set; }
 
 		#endregion
 	}

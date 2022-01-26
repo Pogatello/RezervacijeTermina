@@ -1,14 +1,19 @@
-﻿namespace ZavrsniRad.RezervacijeTermina.Data.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ZavrsniRad.RezervacijeTermina.Data.Models
 {
 	public class AttachmentLogo
 	{
 		#region Properties
 
-		public long Id { get; set; }
+		[Key]
+		public long Id { get; private set; }
 
-		public string Caption { get; set; }
+		[Required]
+		public string Caption { get; private set; }
 
-		public string Content { get; set; }
+		[Required]
+		public string Content { get; private set; }
 
 		#endregion
 	}
