@@ -1,11 +1,32 @@
-﻿@page "/welcome"
-@{
+﻿@page "/"
 
-    <img src="~/images/mainLogo.png" alt="Logo" height="600">
-    <br />
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Http
 
-    <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum</p>
-    <br />
+@layout EmptyLayout
+@inject SignInManager<IdentityUser> SignInManager
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
 
-    <a href="/login">Kreni</a>
+<img src="/images/mainLogo.png" height="600" />
+<br />
+
+<p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum</p>
+<br />
+
+<a href="/Identity/Account/Login" ReturnUrl="/index">Kreni</a>
+
+@code{
+    [Parameter]
+    public string ReturnUrl { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (SignInManager.IsSignedIn(HttpContextAccessor.HttpContext.User))
+        {
+            ReturnUrl = "/index";
+            NavigationManager.NavigateTo(ReturnUrl,
+               forceLoad: true);
+        }
+    }
 }
