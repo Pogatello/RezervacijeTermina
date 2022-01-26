@@ -25,7 +25,7 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Services
 		public ReservationService
 			(
 				IReservationRepository reservationRepository,
-				ILogger logger,
+				ILogger<ReservationService> logger,
 				IEncryptionService encryptionService
 			)
 		{

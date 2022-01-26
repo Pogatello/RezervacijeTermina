@@ -1,20 +1,16 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ZavrsniRad.RezervacijeTermina.Areas.Identity;
 using ZavrsniRad.RezervacijeTermina.Data;
+using ZavrsniRad.RezervacijeTermina.Data.Models;
+using ZavrsniRad.RezervacijeTermina.Data.Repositories;
+using ZavrsniRad.RezervacijeTermina.Data.Services;
 
 namespace ZavrsniRad.RezervacijeTermina
 {
@@ -40,9 +36,23 @@ namespace ZavrsniRad.RezervacijeTermina
 			services.AddServerSideBlazor();
 			services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
 			services.AddDatabaseDeveloperPageExceptionFilter();
-			services.AddSingleton<WeatherForecastService>(); 
-			services.AddHttpContextAccessor();
 
+			#region Configure Services
+
+			services.AddTransient<IReservationService, ReservationService>();
+			services.AddTransient<IEncryptionService, EncryptionService>();
+
+			#endregion
+
+			#region Configure Repositories
+
+			services.AddTransient<IReservationRepository, ReservationRepository>();
+
+			#endregion
+
+			services.AddSingleton<WeatherForecastService>();
+
+			services.AddHttpContextAccessor();
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
