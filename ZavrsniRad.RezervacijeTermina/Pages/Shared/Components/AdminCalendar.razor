@@ -2,7 +2,9 @@
 
 @using Blazorise
 @using System
+@using System.Globalization
 @using System.Linq
+@using ZavrsniRad.RezervacijeTermina.Data.Models
 
 <h3>Calendar</h3>
 
@@ -31,9 +33,9 @@
                 <Column>
                     <p>@hour</p>
                 </Column>
-                @foreach (var day in DaysOfTheWeek)
+                @foreach (var day in DaysOfTheWeek.Select((x, i) => new { Value = x, Index = i }))
                 {
-                    <Column>
+                    <Column @onclick="() => OpenPopupForAdministration(day.Index, hour)">
                         <p></p>
                     </Column>
                 }
@@ -55,6 +57,8 @@
 </style>
 
 @code {
+
+    ReservationEvent ReservationEvent;
 
     DateTime FirstDay;
     DateTime Today;
@@ -117,5 +121,23 @@
     private void WeekAfter()
     {
         FirstDay = GetModayAccordingTo(FirstDay.AddDays(7));
+    }
+
+    private void OpenPopupForAdministration(int dayIndex, string hour)
+    {
+        var selectedDate = FirstDay.AddDays(dayIndex);
+        var selectedTime = DateTime.ParseExact(hour, "HH:mm", CultureInfo.InvariantCulture);
+
+        var selectedDateTime = new DateTime(selectedDate.Year, selectedDate.Month, selectedDate.Day, selectedTime.Hour, selectedTime.Minute, 0);
+
+        var reservationPeriod = new ReservationPeriod
+            (
+                 selectedDateTime,
+                 selectedDateTime.AddHours(1),
+                 ReservationEvent.IsReservationConfirmationNeeded ? false : true,
+                 ReservationPeriodType.Closed,
+                 ReservationEvent.UserId,
+                 ReservationEvent.Id
+            );
     }
 }

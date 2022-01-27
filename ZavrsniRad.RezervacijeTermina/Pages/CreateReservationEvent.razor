@@ -1,4 +1,4 @@
-﻿bla
+﻿@page "/createReservation"
 @inject IReservationService ReservationService
 @inject NavigationManager NavigationManager
 
@@ -54,12 +54,44 @@
         </div>
     </div>
     <br />
+    <div class="row">
 
+        <div class="col form-group">
+            <label> ReservationDurationType</label>
+            <Select TValue="int" SelectedValue="@((int)reservation.ReservationDurationType)" SelectedValueChanged="@OnSelectedValueChangedReservationDurationType">
+                @foreach (var val in Enum.GetValues(typeof(ReservationDurationType)))
+                {
+                    <SelectItem Value="@((int)val)">@val</SelectItem>
+                }
+            </Select>
+        </div>
+    </div>
+    <br />
     <div class="row">
         <div class="col form-group">
+            <label>Logo</label>
             <FileEdit Changed="@OnFileInputChanged" AutoReset="false" Filter="image/jpeg, image/png" />
         </div>
     </div>
+    <br />
+    <br />
+    <br />
+    @if (reservation.ReservationDurationType != ReservationDurationType.Undefined)
+    {
+        <p> Every reservation is currently lasting one hour. Set working hours per each day. Times will be preset one month in the future. Exception can be put in manually in a calendar at the next screen.</p>
+
+        <div class="row">
+            @foreach (var day in DaysWithWorkingTime)
+            {
+                <div class="col form-group">
+                    <label>@day.Day </label><br />
+                    Working From <TimePicker TValue="TimeSpan?" Time="day.WorkingFrom" TimeAs24hr="true" TimeChanged="(input) => OnChangedWorkingFrom(day, input)" />
+                    Working To <TimePicker TValue="TimeSpan?" Time="day.WorkingTo" TimeAs24hr="true" TimeChanged="(input) => OnChangedWorkingTo(day, input)" />
+                </div>
+            }
+        </div>
+    }
+
     <br />
     <button type="submit" class="btn btn-primary">Save</button>
 </EditForm>
@@ -92,15 +124,17 @@
     ReservationEvent reservation = new ReservationEvent();
     string userId;
 
+    List<DayWithWorkingTime> DaysWithWorkingTime;
+
     [CascadingParameter]
-    private Task<AuthenticationState>
-    AuthenticationStateTask
-    { get; set; }
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
         userId = authState.User.Identity.Name;
+
+        DaysWithWorkingTime = InitializeDays();
 
         //inizialize date for datepicker
         reservation.SetActiveFrom(DateTime.Now);
@@ -111,7 +145,8 @@
         var request = new CreateReservationEventRequest
         {
             ReservationEvent = reservation,
-            UserId = userId
+            UserId = userId,
+            DayWithWorkingTimes = DaysWithWorkingTime
         };
 
         var response = await ReservationService.CreateReservationEventAsync(request);
@@ -216,4 +251,65 @@
         }
         return;
     }
+
+    List<DayWithWorkingTime> InitializeDays()
+    {
+        var days = new List<DayWithWorkingTime>();
+
+        days.Add(new DayWithWorkingTime { DayOfWeek = DayOfWeek.Monday, Day = "Ponedjeljak", WorkingFrom = new TimeSpan(8, 0, 0), WorkingTo = new TimeSpan(16, 0, 0) });
+        days.Add(new DayWithWorkingTime { DayOfWeek = DayOfWeek.Tuesday, Day = "Utorak", WorkingFrom = new TimeSpan(8, 0, 0), WorkingTo = new TimeSpan(16, 0, 0) });
+        days.Add(new DayWithWorkingTime { DayOfWeek = DayOfWeek.Wednesday, Day = "Srijeda", WorkingFrom = new TimeSpan(8, 0, 0), WorkingTo = new TimeSpan(16, 0, 0) });
+        days.Add(new DayWithWorkingTime { DayOfWeek = DayOfWeek.Thursday, Day = "Četvrtak", WorkingFrom = new TimeSpan(8, 0, 0), WorkingTo = new TimeSpan(16, 0, 0) });
+        days.Add(new DayWithWorkingTime { DayOfWeek = DayOfWeek.Friday, Day = "Petak", WorkingFrom = new TimeSpan(8, 0, 0), WorkingTo = new TimeSpan(16, 0, 0) });
+        days.Add(new DayWithWorkingTime { DayOfWeek = DayOfWeek.Saturday, Day = "Subota", WorkingFrom = new TimeSpan(8, 0, 0), WorkingTo = new TimeSpan(16, 0, 0) });
+        days.Add(new DayWithWorkingTime { DayOfWeek = DayOfWeek.Sunday, Day = "Nedjelja", WorkingFrom = new TimeSpan(8, 0, 0), WorkingTo = new TimeSpan(16, 0, 0) });
+
+        return days;
+
+    }
+
+    void OnChangedWorkingFrom(DayWithWorkingTime input, TimeSpan? time)
+    {
+        input.WorkingFrom = RoundTime(time);
+    }
+
+    void OnChangedWorkingTo(DayWithWorkingTime input, TimeSpan? time)
+    {
+        input.WorkingTo = RoundTime(time);
+    }
+
+    TimeSpan? RoundTime(TimeSpan? input)
+    {
+        if (input.HasValue)
+        {
+            if (reservation.ReservationDurationType == ReservationDurationType.HalfHour)
+            {
+                if (input.Value.Minutes > 0 && input.Value.Minutes < 30)
+                {
+                    return new TimeSpan(input.Value.Hours, 0, 0);
+                }
+
+                if (input.Value.Minutes > 30)
+                {
+                    return new TimeSpan(input.Value.Hours, 30, 0);
+                }
+            }
+            else if (reservation.ReservationDurationType == ReservationDurationType.Hour)
+            {
+                if (input.Value.Minutes > 0)
+                {
+                    return new TimeSpan(input.Value.Hours, 0, 0);
+                }
+            }
+        }
+
+        return input;
+    }
+
+    void OnSelectedValueChangedReservationDurationType(int value)
+    {
+        reservation.SetReservationDurationType((ReservationDurationType)value);
+        DaysWithWorkingTime = InitializeDays();
+    }
+
 }

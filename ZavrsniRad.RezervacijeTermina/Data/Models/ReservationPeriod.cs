@@ -34,5 +34,23 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 		public ReservationEvent ReservationEvent { get; private set; }
 
 		#endregion
+
+		#region Constructors
+
+		public ReservationPeriod()
+		{
+		}
+
+		public ReservationPeriod(DateTime from, DateTime to, bool isConfirmed, ReservationPeriodType reservationPeriodType, string userId, long reservationEventId)
+		{
+			From = from;
+			To = to;
+			IsConfirmed = isConfirmed;
+			ReservationPeriodType = reservationPeriodType;
+			UserId = userId;
+			ReservationEventId = reservationEventId;
+		}
+
+		#endregion
 	}
 }

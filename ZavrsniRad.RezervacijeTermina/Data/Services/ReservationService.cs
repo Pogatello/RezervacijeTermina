@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ZavrsniRad.RezervacijeTermina.Data.Infrastructure;
 using ZavrsniRad.RezervacijeTermina.Data.Messaging.ReservationEvent.Request;
@@ -17,6 +19,8 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Services
 		private readonly ILogger _logger;
 
 		private readonly IEncryptionService _encryptionService;
+
+		private readonly int RESERVATIONS_DAYS_AHEAD = 30;
 
 		#endregion
 
@@ -106,6 +110,9 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Services
 
 			try
 			{
+				var reservationPeriods = MakeReservationPeriodsForTimeAhead(request.DayWithWorkingTimes, request.ReservationEvent);
+				request.ReservationEvent.SetReservationPeriods(reservationPeriods);
+
 				await _reservationRepository.CreateReservationEventAsync(request.ReservationEvent);
 
 				response.Success = true;
@@ -136,6 +143,63 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Services
 			}
 
 			return response;
+		}
+
+		#endregion
+
+		#region Private Methods
+
+		private IEnumerable<ReservationPeriod> MakeReservationPeriodsForTimeAhead(IEnumerable<DayWithWorkingTime> daysWithTimes, ReservationEvent reservationEvent)
+		{
+			var reservationPeriods = new List<ReservationPeriod>();
+
+			var startDate = reservationEvent.ActiveFrom.Date;
+
+			while (startDate.Date != startDate.AddDays(RESERVATIONS_DAYS_AHEAD).Date)
+			{
+				var correctDayWithWorkingHours = daysWithTimes.ToList().FirstOrDefault(x => x.DayOfWeek == startDate.DayOfWeek);
+
+				reservationPeriods.AddRange(CreatePeriodsForCompleteDay(startDate, correctDayWithWorkingHours, reservationEvent));
+				startDate = startDate.AddDays(1);
+			}
+
+			return reservationPeriods;
+		}
+
+		private IEnumerable<ReservationPeriod> CreatePeriodsForCompleteDay(DateTime date, DayWithWorkingTime dayWithWorkingTime, ReservationEvent reservationEvent)
+		{
+			var reservationPeriods = new List<ReservationPeriod>();
+			var periodStepInMinutes = reservationEvent.ReservationDurationType == ReservationDurationType.HalfHour ? 30 : 60;
+
+			while (date.Date != date.AddDays(1).Date)
+			{
+				reservationPeriods.Add
+					(
+					new ReservationPeriod
+					(
+						date,
+						date.AddMinutes(periodStepInMinutes),
+						reservationEvent.IsReservationConfirmationNeeded ? false : true,
+						CheckReservationPeriodPerWorkingHours(date, dayWithWorkingTime),
+						reservationEvent.UserId,
+						reservationEvent.Id
+						)
+					);
+
+				date = date.AddMinutes(periodStepInMinutes);
+			}
+
+			return reservationPeriods;
+		}
+
+		private ReservationPeriodType CheckReservationPeriodPerWorkingHours(DateTime date, DayWithWorkingTime dayWithWorkingTime)
+		{
+			if (date.TimeOfDay >= dayWithWorkingTime.WorkingFrom && date.TimeOfDay <= dayWithWorkingTime.WorkingTo)
+			{
+				return ReservationPeriodType.Free;
+			}
+
+			return ReservationPeriodType.Closed;
 		}
 
 		#endregion

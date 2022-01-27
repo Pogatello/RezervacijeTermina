@@ -1,10 +1,9 @@
 ﻿namespace ZavrsniRad.RezervacijeTermina.Data.Models
 {
-	public enum ReservationPeriodType
+	public enum ReservationDurationType
 	{
 		Undefined,
-		Closed,
-		Reserved,
-		Free,
+		HalfHour,
+		Hour
 	}
 }

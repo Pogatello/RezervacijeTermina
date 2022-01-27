@@ -33,6 +33,9 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 
 		public bool IsReservationConfirmationNeeded { get; private set; }
 
+		[Required]
+		public ReservationDurationType ReservationDurationType { get; private set; }
+
 		#endregion
 
 		#region Navigation Properties
@@ -94,6 +97,16 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 		public void SetAttachmentLogo(AttachmentLogo attachmentLogo)
 		{
 			AttachmentLogo = attachmentLogo;
+		}
+
+		public void SetReservationDurationType(ReservationDurationType type)
+		{
+			ReservationDurationType = type;
+		}
+
+		public void SetReservationPeriods(IEnumerable<ReservationPeriod> periods)
+		{
+			ReservationPeriods = periods;
 		}
 
 		#endregion
