@@ -1,3 +1,6 @@
+using Blazorise;
+using Blazorise.Bootstrap;
+using Blazorise.Icons.FontAwesome;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Hosting;
@@ -36,6 +39,18 @@ namespace ZavrsniRad.RezervacijeTermina
 			services.AddServerSideBlazor();
 			services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
 			services.AddDatabaseDeveloperPageExceptionFilter();
+
+			#region Blazoriese
+
+			services
+			 .AddBlazorise(options =>
+			 {
+				 options.ChangeTextOnKeyPress = true; // optional
+			 })
+			 .AddBootstrapProviders()
+			 .AddFontAwesomeIcons();
+
+			#endregion
 
 			#region Configure Services
 

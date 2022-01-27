@@ -1,0 +1,219 @@
+﻿bla
+@inject IReservationService ReservationService
+@inject NavigationManager NavigationManager
+
+@using ZavrsniRad.RezervacijeTermina.Data.Services
+@using ZavrsniRad.RezervacijeTermina.Data.Models
+@using ZavrsniRad.RezervacijeTermina.Data.Messaging.ReservationEvent.Request
+@using Microsoft.AspNetCore.Identity
+@using Blazorise
+@using System
+@using System.IO;
+@using System.Text;
+
+<h3>CreateReservationEvent</h3>
+
+<EditForm Model="reservation" OnValidSubmit="@CreateReservationEventAsync">
+    <h5>Reservation</h5>
+    <div class="row">
+        <div class="col form-group">
+            <label>Caption: </label>
+            <TextEdit Text="@reservation.Caption" TextChanged="@OnCaptionChanged"></TextEdit>
+        </div>
+
+        <div class="col form-group">
+            <label>Description: </label>
+            <TextEdit Text="@reservation.Description" TextChanged="@OnDescriptionChanged"></TextEdit>
+        </div>
+
+        <div class="col">
+            <label>AdditionalContactData: </label>
+            <TextEdit Text="@reservation.AdditionalContact" TextChanged="@OnAdditionalContactChanged"></TextEdit>
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col form-group">
+            <Switch TValue="bool" Checked="@reservation.CanUserMakeReservation" CheckedChanged="@OnCanUserMakeReservationChanged">CanUserMakeReservation</Switch>
+        </div>
+
+        <div class="col form-group">
+            <Switch TValue="bool" Checked="@reservation.IsReservationConfirmationNeeded" CheckedChanged="@OnIsReservationConfirmationNeededChanged">IsReservationConfirmationNeeded</Switch>
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col form-group">
+            <label>ActiveFrom: </label>
+            <DateEdit TValue="DateTime" Date="@reservation.ActiveFrom" DateChanged="@OnActiveFromChanged"></DateEdit>
+        </div>
+
+        <div class="col form-group">
+            <label>ActiveTo: </label>
+            <DateEdit TValue="DateTime?" Date="@reservation.ActiveTo" DateChanged="@OnActiveToChanged"></DateEdit>
+        </div>
+    </div>
+    <br />
+
+    <div class="row">
+        <div class="col form-group">
+            <FileEdit Changed="@OnFileInputChanged" AutoReset="false" Filter="image/jpeg, image/png" />
+        </div>
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">Save</button>
+</EditForm>
+
+@if (showPopup)
+{
+    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="titleLabel">Response</h5>
+                    <button type="button" class="close" @onclick="@ClosePopup" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @errorMessage
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="@ClosePopup" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    bool showPopup = false;
+    string errorMessage;
+    ReservationEvent reservation = new ReservationEvent();
+    string userId;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>
+    AuthenticationStateTask
+    { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateTask;
+        userId = authState.User.Identity.Name;
+
+        //inizialize date for datepicker
+        reservation.SetActiveFrom(DateTime.Now);
+    }
+
+    public async Task CreateReservationEventAsync()
+    {
+        var request = new CreateReservationEventRequest
+        {
+            ReservationEvent = reservation,
+            UserId = userId
+        };
+
+        var response = await ReservationService.CreateReservationEventAsync(request);
+
+        if (response.Success)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            ShowPopupWithErrorMessage(response.ErrorMessage);
+        }
+    }
+
+    void ShowPopupWithErrorMessage(string message)
+    {
+        errorMessage = message;
+        showPopup = false;
+    }
+
+    void ClosePopup()
+    {
+        showPopup = false;
+    }
+
+    Task OnCaptionChanged(string value)
+    {
+        reservation.SetCaption(value);
+
+        return Task.CompletedTask;
+    }
+
+    Task OnDescriptionChanged(string value)
+    {
+        reservation.SetDescription(value);
+
+        return Task.CompletedTask;
+    }
+
+    Task OnAdditionalContactChanged(string value)
+    {
+        reservation.SetAdditionalContact(value);
+
+        return Task.CompletedTask;
+    }
+
+    Task OnCanUserMakeReservationChanged(bool value)
+    {
+        reservation.SetCanUserMakeReservation(value);
+
+        return Task.CompletedTask;
+    }
+
+    Task OnIsReservationConfirmationNeededChanged(bool value)
+    {
+        reservation.SetIsReservationConfirmationNeeded(value);
+
+        return Task.CompletedTask;
+    }
+
+    Task OnActiveFromChanged(DateTime date)
+    {
+        reservation.SetActiveFrom(date);
+
+        return Task.CompletedTask;
+    }
+
+    Task OnActiveToChanged(DateTime? date)
+    {
+        reservation.SetActiveTo(date);
+
+        return Task.CompletedTask;
+    }
+
+    async Task OnFileInputChanged(FileChangedEventArgs e)
+    {
+        try
+        {
+            var file = e.Files.FirstOrDefault();
+            if (file != null)
+            {
+                using (var stream = new MemoryStream())
+                {
+                    await file.WriteToStreamAsync(stream);
+                    stream.Seek(0, SeekOrigin.Begin);
+
+                    var bytes = stream.ToArray();
+                    var content = Convert.ToBase64String(bytes);
+
+                    reservation.SetAttachmentLogo(new AttachmentLogo(file.Name, content));
+                }
+            }
+
+        }
+        catch (Exception)
+        {
+            ShowPopupWithErrorMessage("Error uploading file. Please try again.");
+        }
+        finally
+        {
+            this.StateHasChanged();
+        }
+        return;
+    }
+}

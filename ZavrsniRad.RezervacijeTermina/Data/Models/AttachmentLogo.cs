@@ -16,5 +16,15 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 		public string Content { get; private set; }
 
 		#endregion
+
+		#region Constructors
+
+		public AttachmentLogo(string caption, string content)
+		{
+			Caption = caption;
+			Content = content;
+		}
+
+		#endregion
 	}
 }

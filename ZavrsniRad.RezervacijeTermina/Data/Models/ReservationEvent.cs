@@ -48,5 +48,54 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 		public IEnumerable<ReservationPeriod> ReservationPeriods { get; private set; }
 
 		#endregion
+
+		#region Public Methods
+
+		public void SetEncodedId(string encodedId)
+		{
+			EncodedId = encodedId;
+		}
+
+		public void SetCaption(string caption)
+		{
+			Caption = caption;
+		}
+
+		public void SetDescription(string description)
+		{
+			Description = description;
+		}
+
+		public void SetAdditionalContact(string additionalContact)
+		{
+			AdditionalContact = additionalContact;
+		}
+
+		public void SetActiveFrom(DateTime activeFrom)
+		{
+			ActiveFrom = activeFrom;
+		}
+
+		public void SetActiveTo(DateTime? activeTo)
+		{
+			ActiveTo = activeTo;
+		}
+
+		public void SetCanUserMakeReservation(bool canUserMakeReservation)
+		{
+			CanUserMakeReservation = canUserMakeReservation;
+		}
+
+		public void SetIsReservationConfirmationNeeded(bool isReservationConfirmationNeeded)
+		{
+			IsReservationConfirmationNeeded = isReservationConfirmationNeeded;
+		}
+
+		public void SetAttachmentLogo(AttachmentLogo attachmentLogo)
+		{
+			AttachmentLogo = attachmentLogo;
+		}
+
+		#endregion
 	}
 }
