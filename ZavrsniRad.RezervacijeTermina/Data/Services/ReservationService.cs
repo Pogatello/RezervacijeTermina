@@ -112,6 +112,7 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Services
 			{
 				var reservationPeriods = MakeReservationPeriodsForTimeAhead(request.DayWithWorkingTimes, request.ReservationEvent);
 				request.ReservationEvent.SetReservationPeriods(reservationPeriods);
+				request.ReservationEvent.SetUserId(request.UserId);
 
 				await _reservationRepository.CreateReservationEventAsync(request.ReservationEvent);
 
@@ -154,8 +155,9 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Services
 			var reservationPeriods = new List<ReservationPeriod>();
 
 			var startDate = reservationEvent.ActiveFrom.Date;
+			var endDate = startDate.AddDays(RESERVATIONS_DAYS_AHEAD);
 
-			while (startDate.Date != startDate.AddDays(RESERVATIONS_DAYS_AHEAD).Date)
+			while (startDate.Date != endDate.Date)
 			{
 				var correctDayWithWorkingHours = daysWithTimes.ToList().FirstOrDefault(x => x.DayOfWeek == startDate.DayOfWeek);
 
@@ -170,8 +172,9 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Services
 		{
 			var reservationPeriods = new List<ReservationPeriod>();
 			var periodStepInMinutes = reservationEvent.ReservationDurationType == ReservationDurationType.HalfHour ? 30 : 60;
+			var endDate = date.AddDays(1);
 
-			while (date.Date != date.AddDays(1).Date)
+			while (date.Date != endDate.Date)
 			{
 				reservationPeriods.Add
 					(

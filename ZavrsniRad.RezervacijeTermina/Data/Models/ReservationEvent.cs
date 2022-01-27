@@ -44,6 +44,7 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 
 		public AttachmentLogo AttachmentLogo { get; private set; }
 
+		[Required]
 		public string UserId { get; private set; }
 
 		public IdentityUser User { get; private set; }
@@ -107,6 +108,11 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 		public void SetReservationPeriods(IEnumerable<ReservationPeriod> periods)
 		{
 			ReservationPeriods = periods;
+		}
+
+		public void SetUserId(string userId)
+		{
+			UserId = userId;
 		}
 
 		#endregion
