@@ -1,0 +1,95 @@
+﻿@page "/details/{id}"
+
+@using Blazorise
+@using ZavrsniRad.RezervacijeTermina.Data.Models
+@using ZavrsniRad.RezervacijeTermina.Data.Services
+@using ZavrsniRad.RezervacijeTermina.Data.Models
+@using ZavrsniRad.RezervacijeTermina.Data.Messaging.ReservationEvent.Request
+@using Microsoft.AspNetCore.Identity
+@using Blazorise
+@using System
+@using System.IO;
+@using System.Text;
+
+@inject IReservationService ReservationService
+
+<AuthorizeView>
+    <Authorized Context="Auth">
+        <Container>
+            <h3>ReservationEventDetails</h3>
+
+            <label>@ReservationEvent.Caption</label>
+
+            @if (showPopup)
+            {
+                <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="titleLabel">Response</h5>
+                                <button type="button" class="close" @onclick="@ClosePopup" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">×</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                @ErrorMessage
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" @onclick="@ClosePopup" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </Container>
+    </Authorized>
+    <NotAuthorized>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter]
+    public long Id { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
+    ReservationEvent ReservationEvent;
+    bool IsOwner;
+    string ErrorMessage;
+    bool showPopup;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateTask;
+        var userId = authState.User.Identity.Name;
+
+        if (userId == ReservationEvent.UserId)
+        {
+            IsOwner = true;
+        }
+
+        var response = await ReservationService.GetReservationEventByIdAsync(new GetReservationEventRequest { Id = Id, UserId = userId });
+
+        if (response.Success)
+        {
+            ReservationEvent = response.ReservationEvent;
+        }
+        else
+        {
+            ShowPopupWithErrorMessage(response.ErrorMessage);
+        }
+    }
+
+    void ShowPopupWithErrorMessage(string message)
+    {
+        ErrorMessage = message;
+        showPopup = true;
+    }
+
+    void ClosePopup()
+    {
+        showPopup = false;
+    }
+
+}

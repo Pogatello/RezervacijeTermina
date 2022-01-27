@@ -11,112 +11,118 @@
 @using System.IO;
 @using System.Text;
 
-<h3>CreateReservationEvent</h3>
+<AuthorizeView>
+    <Authorized Context="Auth">
+        <h3>CreateReservationEvent</h3>
 
-<EditForm Model="reservation" OnValidSubmit="@CreateReservationEventAsync">
-    <h5>Reservation</h5>
-    <div class="row">
-        <div class="col form-group">
-            <label>Caption: </label>
-            <TextEdit Text="@reservation.Caption" TextChanged="@OnCaptionChanged"></TextEdit>
-        </div>
-
-        <div class="col form-group">
-            <label>Description: </label>
-            <TextEdit Text="@reservation.Description" TextChanged="@OnDescriptionChanged"></TextEdit>
-        </div>
-
-        <div class="col">
-            <label>AdditionalContactData: </label>
-            <TextEdit Text="@reservation.AdditionalContact" TextChanged="@OnAdditionalContactChanged"></TextEdit>
-        </div>
-    </div>
-    <br />
-    <div class="row">
-        <div class="col form-group">
-            <Switch TValue="bool" Checked="@reservation.CanUserMakeReservation" CheckedChanged="@OnCanUserMakeReservationChanged">CanUserMakeReservation</Switch>
-        </div>
-
-        <div class="col form-group">
-            <Switch TValue="bool" Checked="@reservation.IsReservationConfirmationNeeded" CheckedChanged="@OnIsReservationConfirmationNeededChanged">IsReservationConfirmationNeeded</Switch>
-        </div>
-    </div>
-    <br />
-    <div class="row">
-        <div class="col form-group">
-            <label>ActiveFrom: </label>
-            <DateEdit TValue="DateTime" Date="@reservation.ActiveFrom" DateChanged="@OnActiveFromChanged"></DateEdit>
-        </div>
-
-        <div class="col form-group">
-            <label>ActiveTo: </label>
-            <DateEdit TValue="DateTime?" Date="@reservation.ActiveTo" DateChanged="@OnActiveToChanged"></DateEdit>
-        </div>
-    </div>
-    <br />
-    <div class="row">
-
-        <div class="col form-group">
-            <label> ReservationDurationType</label>
-            <Select TValue="int" SelectedValue="@((int)reservation.ReservationDurationType)" SelectedValueChanged="@OnSelectedValueChangedReservationDurationType">
-                @foreach (var val in Enum.GetValues(typeof(ReservationDurationType)))
-                {
-                    <SelectItem Value="@((int)val)">@val</SelectItem>
-                }
-            </Select>
-        </div>
-    </div>
-    <br />
-    <div class="row">
-        <div class="col form-group">
-            <label>Logo</label>
-            <FileEdit Changed="@OnFileInputChanged" AutoReset="false" Filter="image/jpeg, image/png" />
-        </div>
-    </div>
-    <br />
-    <br />
-    <br />
-    @if (reservation.ReservationDurationType != ReservationDurationType.Undefined)
-    {
-        <p> Every reservation is currently lasting one hour. Set working hours per each day. Times will be preset one month in the future. Exception can be put in manually in a calendar at the next screen.</p>
-
-        <div class="row">
-            @foreach (var day in DaysWithWorkingTime)
-            {
+        <EditForm Model="reservation" OnValidSubmit="@CreateReservationEventAsync">
+            <h5>Reservation</h5>
+            <div class="row">
                 <div class="col form-group">
-                    <label>@day.Day </label><br />
-                    Working From <TimePicker TValue="TimeSpan?" Time="day.WorkingFrom" TimeAs24hr="true" TimeChanged="(input) => OnChangedWorkingFrom(day, input)" />
-                    Working To <TimePicker TValue="TimeSpan?" Time="day.WorkingTo" TimeAs24hr="true" TimeChanged="(input) => OnChangedWorkingTo(day, input)" />
+                    <label>Caption: </label>
+                    <TextEdit Text="@reservation.Caption" TextChanged="@OnCaptionChanged"></TextEdit>
                 </div>
-            }
-        </div>
-    }
 
-    <br />
-    <button type="submit" class="btn btn-primary">Save</button>
-</EditForm>
+                <div class="col form-group">
+                    <label>Description: </label>
+                    <TextEdit Text="@reservation.Description" TextChanged="@OnDescriptionChanged"></TextEdit>
+                </div>
 
-@if (showPopup)
-{
-    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="titleLabel">Response</h5>
-                    <button type="button" class="close" @onclick="@ClosePopup" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    @errorMessage
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @onclick="@ClosePopup" data-dismiss="modal">Close</button>
+                <div class="col">
+                    <label>AdditionalContactData: </label>
+                    <TextEdit Text="@reservation.AdditionalContact" TextChanged="@OnAdditionalContactChanged"></TextEdit>
                 </div>
             </div>
-        </div>
-    </div>
-}
+            <br />
+            <div class="row">
+                <div class="col form-group">
+                    <Switch TValue="bool" Checked="@reservation.CanUserMakeReservation" CheckedChanged="@OnCanUserMakeReservationChanged">CanUserMakeReservation</Switch>
+                </div>
+
+                <div class="col form-group">
+                    <Switch TValue="bool" Checked="@reservation.IsReservationConfirmationNeeded" CheckedChanged="@OnIsReservationConfirmationNeededChanged">IsReservationConfirmationNeeded</Switch>
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                <div class="col form-group">
+                    <label>ActiveFrom: </label>
+                    <DateEdit TValue="DateTime" Date="@reservation.ActiveFrom" DateChanged="@OnActiveFromChanged"></DateEdit>
+                </div>
+
+                <div class="col form-group">
+                    <label>ActiveTo: </label>
+                    <DateEdit TValue="DateTime?" Date="@reservation.ActiveTo" DateChanged="@OnActiveToChanged"></DateEdit>
+                </div>
+            </div>
+            <br />
+            <div class="row">
+
+                <div class="col form-group">
+                    <label> ReservationDurationType</label>
+                    <Select TValue="int" SelectedValue="@((int)reservation.ReservationDurationType)" SelectedValueChanged="@OnSelectedValueChangedReservationDurationType">
+                        @foreach (var val in Enum.GetValues(typeof(ReservationDurationType)))
+                        {
+                            <SelectItem Value="@((int)val)">@val</SelectItem>
+                        }
+                    </Select>
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                <div class="col form-group">
+                    <label>Logo</label>
+                    <FileEdit Changed="@OnFileInputChanged" AutoReset="false" Filter="image/jpeg, image/png" />
+                </div>
+            </div>
+            <br />
+            <br />
+            <br />
+            @if (reservation.ReservationDurationType != ReservationDurationType.Undefined)
+            {
+                <p> Every reservation is currently lasting one hour. Set working hours per each day. Times will be preset one month in the future. Exception can be put in manually in a calendar at the next screen.</p>
+
+                <div class="row">
+                    @foreach (var day in DaysWithWorkingTime)
+                    {
+                        <div class="col form-group">
+                            <label>@day.Day </label><br />
+                            Working From <TimePicker TValue="TimeSpan?" Time="day.WorkingFrom" TimeAs24hr="true" TimeChanged="(input) => OnChangedWorkingFrom(day, input)" />
+                            Working To <TimePicker TValue="TimeSpan?" Time="day.WorkingTo" TimeAs24hr="true" TimeChanged="(input) => OnChangedWorkingTo(day, input)" />
+                        </div>
+                    }
+                </div>
+            }
+
+            <br />
+            <button type="submit" class="btn btn-primary">Save</button>
+        </EditForm>
+
+        @if (showPopup)
+        {
+            <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="titleLabel">Response</h5>
+                            <button type="button" class="close" @onclick="@ClosePopup" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            @errorMessage
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @onclick="@ClosePopup" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </Authorized>
+    <NotAuthorized>
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
     bool showPopup = false;
@@ -164,7 +170,7 @@
     void ShowPopupWithErrorMessage(string message)
     {
         errorMessage = message;
-        showPopup = false;
+        showPopup = true;
     }
 
     void ClosePopup()

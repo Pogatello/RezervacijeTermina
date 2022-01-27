@@ -88,9 +88,9 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Services
 
 			try
 			{
-				var decryptedId = _encryptionService.UrlDecodeAndDecrypt(request.Id);
+				//var decryptedId = _encryptionService.UrlDecodeAndDecrypt(request.Id);
 
-				var reservationEvent = await _reservationRepository.GetReservationEventByIdAsync(Convert.ToInt64(decryptedId));
+				var reservationEvent = await _reservationRepository.GetReservationEventByIdAsync(request.Id);
 
 				response.ReservationEvent = reservationEvent;
 				response.Success = true;
