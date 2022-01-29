@@ -66,95 +66,132 @@
         }
     </Container>
 </div>
-
 <Modal @ref="editModalRef">
-    <ModalContent Centered="true">
-        <ModalHeader>
-            <ModalTitle>Uređivanje termina</ModalTitle>
-            <CloseButton />
-        </ModalHeader>
-        @if (ModalEditPeriod != null)
-        {
-            <ModalBody>
-                @if (IsOwner)
-                {
-                    @if (ModalEditPeriod?.User != null)
-                    {
-                        <Field>
 
-                            <FieldLabel>Termin rezerviran od strane korisnika @ModalEditPeriod.User.UserName</FieldLabel>
-                        </Field>
-                    }
+    @if (ModalEditPeriod != null)
+    {
+        @if (IsOwner)
+        {
+            <ModalContent Centered="true">
+                <ModalHeader>
+                    <ModalTitle>Uređivanje termina</ModalTitle>
+                    <CloseButton />
+                </ModalHeader>
+
+                <ModalBody>
 
                     <Field>
                         <FieldLabel>@ModalEditPeriod.From.Date.ToString("dd.MM.yyyy")</FieldLabel>
                         <FieldLabel>Od @ModalEditPeriod.From.ToString(@"HH\:mm") - Do @ModalEditPeriod.To.ToString(@"HH\:mm")</FieldLabel>
                     </Field>
 
-                    @if (ModalEditPeriod.ReservationMade && ModalEditPeriod.IsConfirmed == false)
+                    @if (ModalEditPeriod.ReservationMade == false)
                     {
-                        <Field>
-                            Potrebno je potvrditi rezervaciju:
-
-                            <Switch TValue="bool" Checked="@ModalEditPeriod.IsConfirmed" CheckedChanged="@OnIsConfirmedChanged">Rezervacija potvrđena</Switch>
-                        </Field>
-                    }
-                    else if (ModalEditPeriod.ReservationMade && ModalEditPeriod.IsConfirmed == false)
-                    {
-                        <Field>
-                            <Switch TValue="bool" Checked="@ModalEditPeriod.IsConfirmed" CheckedChanged="@OnIsConfirmedChanged">Rezervacija već potvrđena</Switch>
-                        </Field>
-                    }
-                    else
-                    {
-
                         <Field>
                             <FieldLabel>Tip termina</FieldLabel>
                             <Select TValue="int" SelectedValue="@((int)ModalEditPeriod.ReservationPeriodType)" SelectedValueChanged="@OnSelectedValueChangedReservationPeriodType">
                                 <SelectItem Value="@((int)ReservationPeriodType.Closed)">Zatvoreno</SelectItem>
-                                <SelectItem Value="@((int)ReservationPeriodType.Reserved)">Rezerviran termin</SelectItem>
+                                <SelectItem Value="@((int)ReservationPeriodType.Reserved)">Rezerviran termin (Bez informacije kojem korisniku)</SelectItem>
                                 <SelectItem Value="@((int)ReservationPeriodType.Free)">Slobodan termin</SelectItem>
                             </Select>
                         </Field>
-
-                        <Field>
-                            <Switch TValue="bool" Checked="@ModalEditPeriod.IsConfirmed" CheckedChanged="@OnIsConfirmedChanged">Rezervacija potvrđena</Switch>
-                        </Field>
-                    }
-                }
-                else
-                {
-                    @if (ModalEditPeriod.ReservationMade)
-                    {
-                        <Field>Rezervirano. Nemate pravo pregleda</Field>
                     }
                     else
                     {
                         <Field>
-                            Želite li rezervirati odabrani termin?
+                            <FieldLabel>Termin rezerviran od strane korisnika @ModalEditPeriod.User.UserName dana @ModalEditPeriod.ReservationMadeAt.Value.ToString("dd.MM.yyyy HH:mm")</FieldLabel>
                         </Field>
+
+                        if (ModalEditPeriod.IsConfirmed == false)
+                        {
+                            <Field>
+                                Potrebno je potvrditi ili odbiti rezervaciju.
+
+                                <Switch TValue="bool" Checked="@ModalEditPeriod.IsConfirmed" CheckedChanged="@OnIsConfirmedChanged">Rezervacija potvrđena</Switch>
+                            </Field>
+                        }
+                        else
+                        {
+                            <Field>Rezervacija već potvrđena</Field>
+                        }
+                    }
+                </ModalBody>
+                <ModalFooter>
+                    <Button Color="Color.Secondary" Clicked="@HideEditModal">Zatvori</Button>
+                    @if (ModalEditPeriod.ReservationMade == false)
+                    {
+                        <Button Color="Color.Primary" Clicked="@UpdateReservation">Spremi promjene</Button>
+                    }
+                    else if (ModalEditPeriod.ReservationMade && ModalEditPeriod.IsConfirmed == false)
+                    {
+                        <Button Color="Color.Primary" Clicked="@ConfirmReservation">Potvrdi/odbij rezervaciju</Button>
+
+                    }
+                </ModalFooter>
+            </ModalContent>
+        }
+        else
+        {
+            <ModalContent Centered="true">
+                <ModalHeader>
+                    <ModalTitle>Uređivanje termina</ModalTitle>
+                    <CloseButton />
+                </ModalHeader>
+                @if (ModalEditPeriod != null)
+                {
+                    <ModalBody>
 
                         <Field>
                             <FieldLabel>@ModalEditPeriod.From.Date.ToString("dd.MM.yyyy")</FieldLabel>
                             <FieldLabel>Od @ModalEditPeriod.From.ToString(@"HH\:mm") - Do @ModalEditPeriod.To.ToString(@"HH\:mm")</FieldLabel>
                         </Field>
-                        <Field>
-                            @if (ReservationEvent.IsReservationConfirmationNeeded)
+
+                        @if (ModalEditPeriod.ReservationMade && ModalEditPeriod.IsConfirmed)
+                        {
+                            @if (ModalEditPeriod?.User != null)
                             {
-                                <Field>Obavijest o potvrdi termina stići će na email nakon što vlasnik potvrdi termin.</Field>
+                                <Field>
+                                    <FieldLabel>Termin rezerviran od strane korisnika @ModalEditPeriod.User.UserName</FieldLabel>
+                                    <FieldLabel>Termin potvrđen!</FieldLabel>
+                                </Field>
                             }
-                        </Field>
-                    }
+                        }
+                        else if (ModalEditPeriod.ReservationMade && ModalEditPeriod.IsConfirmed == false)
+                        {
+                            <FieldLabel>Termin rezerviran od strane korisnika @ModalEditPeriod.User.UserName</FieldLabel>
+                            <FieldLabel>Vlasnik još nije potvrdio/otkazao rezervaciju.</FieldLabel>
 
+                        }
+                        else
+                        {
+                            <Field>
+                                Želite li rezervirati odabrani termin?
+                            </Field>
+
+                            <Field>
+                                @if (ReservationEvent.IsReservationConfirmationNeeded)
+                                {
+                                    <Field>Termin je valjan tek nakon što ga vlasnik potvrdi. Provjerite stranicu i email nešto kasnije.</Field>
+                                }
+                                else
+                                {
+                                    <Field>Termin se smatra valjanim od strane vlasnika u trenutka kada ga potvrdite!</Field>
+                                }
+                            </Field>
+                        }
+                    </ModalBody>
                 }
-            </ModalBody>
+                <ModalFooter>
+                    <Button Color="Color.Secondary" Clicked="@HideEditModal">Zatvori</Button>
+                    @if (ModalEditPeriod.ReservationMade == false && ModalEditPeriod.IsConfirmed == false)
+                    {
+                        <Button Color="Color.Primary" Clicked="@UserMadeReservation">Potvrdi termin</Button>
+                    }
+                </ModalFooter>
+            </ModalContent>
         }
-        <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="@HideEditModal">Close</Button>
 
-            <Button Color="Color.Primary" Clicked="@UpdateReservation">Save Changes</Button>
-        </ModalFooter>
-    </ModalContent>
+    }
 </Modal>
 
 <Modal @ref="createModalRef">
@@ -179,17 +216,11 @@
                         <SelectItem Value="@((int)ReservationPeriodType.Reserved)">Rezerviran termin (Bez informacije kojem korisniku)</SelectItem>
                     </Select>
                 </Field>
-
-                <Field>
-                    <Switch TValue="bool" Checked="@ModalCreatePeriod.IsConfirmed" Disabled="true">Rezervacija potvrđena</Switch>
-                </Field>
-
-                Dodati Button za odbijanje rezervacije korisnika - resetirati user na reservationu
             </ModalBody>
         }
         <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="@HideCreateModal">Close</Button>
-            <Button Color="Color.Primary" Clicked="@CreateReservation">Save Changes</Button>
+            <Button Color="Color.Secondary" Clicked="@HideCreateModal">Zatvori</Button>
+            <Button Color="Color.Primary" Clicked="@CreateReservation">Kreiraj novi termin</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>
@@ -437,6 +468,62 @@
                     UserId = IsOwner ? null : UserId
                 }
             );
+
+        if (response.Success)
+        {
+            HideEditModal();
+        }
+        else
+        {
+            ShowPopupWithErrorMessage(response.ErrorMessage);
+        }
+
+    }
+
+    async Task ConfirmReservation()
+    {
+        if (ModalEditPeriod.IsConfirmed == false)
+        {
+            //cancle reservation
+            ModalEditPeriod.ResetUser();
+            ModalEditPeriod.SetReservationPeriodType(ReservationPeriodType.Free);
+        }
+
+        ModalEditPeriod.SetReservationPeriodType(ReservationPeriodType.Reserved);
+
+        var response = await ReservationPeriodService.UpdateReservationPeriodsAsync
+        (
+            new UpdateReservationPeriodRequest
+            {
+                ReservationPeriod = ModalEditPeriod,
+                UserId = IsOwner ? null : UserId
+            }
+        );
+
+        if (response.Success)
+        {
+            HideEditModal();
+        }
+        else
+        {
+            ShowPopupWithErrorMessage(response.ErrorMessage);
+        }
+
+    }
+
+    async Task UserMadeReservation()
+    {
+        ModalEditPeriod.SetIsConfirmed(ReservationEvent.IsReservationConfirmationNeeded ? false : true);
+        ModalEditPeriod.SetReservationMade(true);
+
+        var response = await ReservationPeriodService.UpdateReservationPeriodsAsync
+        (
+            new UpdateReservationPeriodRequest
+            {
+                ReservationPeriod = ModalEditPeriod,
+                UserId = UserId
+            }
+        );
 
         if (response.Success)
         {

@@ -68,9 +68,30 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 			IsConfirmed = isConfirmed;
 		}
 
+		public void SetReservationMade(bool reservationMade)
+		{
+			ReservationMade = reservationMade;
+
+			if (reservationMade)
+			{
+				ReservationMadeAt = DateTime.Now;
+			}
+			else
+			{
+				ReservationMadeAt = null;
+			}
+		}
+
 		public bool IsForClosing()
 		{
-			return ReservationPeriodType.Closed == ReservationPeriodType.Closed;
+			return ReservationPeriodType == ReservationPeriodType.Closed;
+		}
+
+		public void ResetUser()
+		{
+			//used for cancleing reservations
+			User = null;
+			UserId = null;
 		}
 
 		#endregion
