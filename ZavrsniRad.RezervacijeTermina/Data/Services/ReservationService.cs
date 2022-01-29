@@ -184,7 +184,6 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Services
 					(
 						startDateTime,
 						startDateTime.AddMinutes(periodStepInMinutes),
-						reservationEvent.IsReservationConfirmationNeeded ? false : true,
 						CheckReservationPeriodPerWorkingHours(startDateTime, dayWithWorkingTime),
 						reservationEvent.UserId,
 						reservationEvent.Id

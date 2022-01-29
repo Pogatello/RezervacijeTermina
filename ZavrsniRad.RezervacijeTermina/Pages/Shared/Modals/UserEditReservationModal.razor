@@ -1,0 +1,93 @@
+﻿<Modal @ref="editModalRef">
+    <ModalContent Centered="true">
+        <ModalHeader>
+            <ModalTitle>Uređivanje termina</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        @if (ModalEditPeriod != null)
+        {
+            <ModalBody>
+                @if (IsOwner)
+                {
+                    @if (ModalEditPeriod?.User != null)
+                    {
+                        <Field>
+
+                            <FieldLabel>Termin rezerviran od strane korisnika @ModalEditPeriod.User.UserName</FieldLabel>
+                        </Field>
+                    }
+
+                    <Field>
+                        <FieldLabel>@ModalEditPeriod.From.Date.ToString("dd.MM.yyyy")</FieldLabel>
+                        <FieldLabel>Od @ModalEditPeriod.From.ToString(@"HH\:mm") - Do @ModalEditPeriod.To.ToString(@"HH\:mm")</FieldLabel>
+                    </Field>
+
+                    @if (ModalEditPeriod.ReservationMade && ModalEditPeriod.IsConfirmed == false)
+                    {
+                        <Field>
+                            Potrebno je potvrditi rezervaciju:
+
+                            <Switch TValue="bool" Checked="@ModalEditPeriod.IsConfirmed" CheckedChanged="@OnIsConfirmedChanged">Rezervacija potvrđena</Switch>
+                        </Field>
+                    }
+                    else if (ModalEditPeriod.ReservationMade && ModalEditPeriod.IsConfirmed == false)
+                    {
+                        <Field>
+                            <Switch TValue="bool" Checked="@ModalEditPeriod.IsConfirmed" CheckedChanged="@OnIsConfirmedChanged">Rezervacija već potvrđena</Switch>
+                        </Field>
+                    }
+                    else
+                    {
+
+                        <Field>
+                            <FieldLabel>Tip termina</FieldLabel>
+                            <Select TValue="int" SelectedValue="@((int)ModalEditPeriod.ReservationPeriodType)" SelectedValueChanged="@OnSelectedValueChangedReservationPeriodType">
+                                <SelectItem Value="@((int)ReservationPeriodType.Closed)">Zatvoreno</SelectItem>
+                                <SelectItem Value="@((int)ReservationPeriodType.Reserved)">Rezerviran termin</SelectItem>
+                                <SelectItem Value="@((int)ReservationPeriodType.Free)">Slobodan termin</SelectItem>
+                            </Select>
+                        </Field>
+
+                        <Field>
+                            <Switch TValue="bool" Checked="@ModalEditPeriod.IsConfirmed" CheckedChanged="@OnIsConfirmedChanged">Rezervacija potvrđena</Switch>
+                        </Field>
+                    }
+                }
+                else
+                {
+                    @if (ModalEditPeriod.ReservationMade)
+                    {
+                        <Field>Rezervirano. Nemate pravo pregleda</Field>
+                    }
+                    else
+                    {
+                        <Field>
+                            Želite li rezervirati odabrani termin?
+                        </Field>
+
+                        <Field>
+                            <FieldLabel>@ModalEditPeriod.From.Date.ToString("dd.MM.yyyy")</FieldLabel>
+                            <FieldLabel>Od @ModalEditPeriod.From.ToString(@"HH\:mm") - Do @ModalEditPeriod.To.ToString(@"HH\:mm")</FieldLabel>
+                        </Field>
+                        <Field>
+                            @if (ReservationEvent.IsReservationConfirmationNeeded)
+                            {
+                                <Field>Obavijest o potvrdi termina stići će na email nakon što vlasnik potvrdi termin.</Field>
+                            }
+                        </Field>
+                    }
+
+                }
+            </ModalBody>
+        }
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideEditModal">Close</Button>
+
+            <Button Color="Color.Primary" Clicked="@UpdateReservation">Save Changes</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+
+}

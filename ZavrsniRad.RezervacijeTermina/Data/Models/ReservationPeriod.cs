@@ -45,11 +45,10 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 		{
 		}
 
-		public ReservationPeriod(DateTime from, DateTime to, bool isConfirmed, ReservationPeriodType reservationPeriodType, string userId, long reservationEventId)
+		public ReservationPeriod(DateTime from, DateTime to, ReservationPeriodType reservationPeriodType, string userId, long reservationEventId)
 		{
 			From = from;
 			To = to;
-			IsConfirmed = isConfirmed;
 			ReservationPeriodType = reservationPeriodType;
 			UserId = userId;
 			ReservationEventId = reservationEventId;
@@ -67,6 +66,11 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 		public void SetIsConfirmed(bool isConfirmed)
 		{
 			IsConfirmed = isConfirmed;
+		}
+
+		public bool IsForClosing()
+		{
+			return ReservationPeriodType.Closed == ReservationPeriodType.Closed;
 		}
 
 		#endregion

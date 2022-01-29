@@ -58,7 +58,14 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Services
 			var response = new UpdateReservationPeriodResponse();
 			try
 			{
-				await _reservationRepository.UpdateReservationPeriodAsync(request.ReservationPeriod);
+				if (request.ReservationPeriod.IsForClosing())
+				{
+					await _reservationRepository.DeleteReservationPeriodAsync(request.ReservationPeriod);
+				}
+				else
+				{
+					await _reservationRepository.UpdateReservationPeriodAsync(request.ReservationPeriod);
+				}
 
 				response.Success = true;
 			}

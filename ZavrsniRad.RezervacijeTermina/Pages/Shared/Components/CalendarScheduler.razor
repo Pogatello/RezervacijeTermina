@@ -36,20 +36,31 @@
                 <Column>
                     <p>@periodGroup.Key.ToString(@"hh\:mm")</p>
                 </Column>
-                @*//if data is not for a full week, fill with empty cells*@
-                @if (periodGroup.Count() < 7)
+
+                @for (int i = 0; i < 7; i++)
                 {
-                    for (int i = 0; i < 7 - periodGroup.Count(); i++)
+                    int indexBuffer = i;
+                    var resPeriod = GetReservationPeriod(periodGroup, indexBuffer);
+
+                    @if (resPeriod != null)
                     {
-                        <Column>
+                        <Column @onclick="() => OpenPopupForAdministration(resPeriod)">
+                            Id: @resPeriod.Id
                         </Column>
                     }
-                }
-                @foreach (var periodPerHour in periodGroup)
-                {
-                    <Column @onclick="() => OpenPopupForAdministration(periodPerHour)">
-                        Id: @periodPerHour.Id
-                    </Column>
+                    else
+                    {
+                        @if (IsOwner)
+                        {
+                            <Column Class="cellDisabled" @onclick="() => OpenPopupForNewPeriod(periodGroup.Key, indexBuffer)">
+                            </Column>
+                        }
+                        else
+                        {
+                            <Column Class="cellDisabled">
+                            </Column>
+                        }
+                    }
                 }
             </Row>
         }
@@ -67,38 +78,118 @@
             <ModalBody>
                 @if (IsOwner)
                 {
+                    @if (ModalEditPeriod?.User != null)
+                    {
+                        <Field>
 
-                    <Field>
-                        @if (ModalEditPeriod?.User != null)
-                        {
                             <FieldLabel>Termin rezerviran od strane korisnika @ModalEditPeriod.User.UserName</FieldLabel>
-                        }
-                        else
-                        {
-                            <FieldLabel>Termin kreiran od strane sustava</FieldLabel>
-                        }
-                    </Field>
+                        </Field>
+                    }
 
                     <Field>
-                        <FieldLabel>Tip termina</FieldLabel>
-                        <Select TValue="int" SelectedValue="@((int)ModalEditPeriod.ReservationPeriodType)" SelectedValueChanged="@OnSelectedValueChangedReservationPeriodType">
-                            <SelectItem Value="@((int)ReservationPeriodType.Closed)">Zatvoreno</SelectItem>
-                            <SelectItem Value="@((int)ReservationPeriodType.Reserved)">Rezerviran termin</SelectItem>
-                            <SelectItem Value="@((int)ReservationPeriodType.Free)">Slobodan termin</SelectItem>
-                        </Select>
+                        <FieldLabel>@ModalEditPeriod.From.Date.ToString("dd.MM.yyyy")</FieldLabel>
+                        <FieldLabel>Od @ModalEditPeriod.From.ToString(@"HH\:mm") - Do @ModalEditPeriod.To.ToString(@"HH\:mm")</FieldLabel>
                     </Field>
 
-                    <Field>
-                        <Switch TValue="bool" Checked="@ModalEditPeriod.IsConfirmed" CheckedChanged="@OnIsConfirmedChanged">Rezervacija potvrđena</Switch>
-                    </Field>
+                    @if (ModalEditPeriod.ReservationMade && ModalEditPeriod.IsConfirmed == false)
+                    {
+                        <Field>
+                            Potrebno je potvrditi rezervaciju:
+
+                            <Switch TValue="bool" Checked="@ModalEditPeriod.IsConfirmed" CheckedChanged="@OnIsConfirmedChanged">Rezervacija potvrđena</Switch>
+                        </Field>
+                    }
+                    else if (ModalEditPeriod.ReservationMade && ModalEditPeriod.IsConfirmed == false)
+                    {
+                        <Field>
+                            <Switch TValue="bool" Checked="@ModalEditPeriod.IsConfirmed" CheckedChanged="@OnIsConfirmedChanged">Rezervacija već potvrđena</Switch>
+                        </Field>
+                    }
+                    else
+                    {
+
+                        <Field>
+                            <FieldLabel>Tip termina</FieldLabel>
+                            <Select TValue="int" SelectedValue="@((int)ModalEditPeriod.ReservationPeriodType)" SelectedValueChanged="@OnSelectedValueChangedReservationPeriodType">
+                                <SelectItem Value="@((int)ReservationPeriodType.Closed)">Zatvoreno</SelectItem>
+                                <SelectItem Value="@((int)ReservationPeriodType.Reserved)">Rezerviran termin</SelectItem>
+                                <SelectItem Value="@((int)ReservationPeriodType.Free)">Slobodan termin</SelectItem>
+                            </Select>
+                        </Field>
+
+                        <Field>
+                            <Switch TValue="bool" Checked="@ModalEditPeriod.IsConfirmed" CheckedChanged="@OnIsConfirmedChanged">Rezervacija potvrđena</Switch>
+                        </Field>
+                    }
                 }
+                else
+                {
+                    @if (ModalEditPeriod.ReservationMade)
+                    {
+                        <Field>Rezervirano. Nemate pravo pregleda</Field>
+                    }
+                    else
+                    {
+                        <Field>
+                            Želite li rezervirati odabrani termin?
+                        </Field>
+
+                        <Field>
+                            <FieldLabel>@ModalEditPeriod.From.Date.ToString("dd.MM.yyyy")</FieldLabel>
+                            <FieldLabel>Od @ModalEditPeriod.From.ToString(@"HH\:mm") - Do @ModalEditPeriod.To.ToString(@"HH\:mm")</FieldLabel>
+                        </Field>
+                        <Field>
+                            @if (ReservationEvent.IsReservationConfirmationNeeded)
+                            {
+                                <Field>Obavijest o potvrdi termina stići će na email nakon što vlasnik potvrdi termin.</Field>
+                            }
+                        </Field>
+                    }
+
+                }
+            </ModalBody>
+        }
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideEditModal">Close</Button>
+
+            <Button Color="Color.Primary" Clicked="@UpdateReservation">Save Changes</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="createModalRef">
+    <ModalContent Centered="true">
+        <ModalHeader>
+            <ModalTitle>Novi termin</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        @if (ModalCreatePeriod != null)
+        {
+            <ModalBody>
+                <Field>
+                    <FieldLabel>@ModalCreatePeriod.From.Date.ToString("dd.MM.yyyy")</FieldLabel>
+                    <FieldLabel>Od @ModalCreatePeriod.From.ToString(@"HH\:mm") - Do @ModalCreatePeriod.To.ToString(@"HH\:mm")</FieldLabel>
+                </Field>
+
+                <Field>
+                    <FieldLabel>Tip termina</FieldLabel>
+                    <Select TValue="int" SelectedValue="@((int)ModalCreatePeriod.ReservationPeriodType)" SelectedValueChanged="@OnSelectedValueChangedReservationPeriodTypeForCreate">
+                        <SelectItem Value="@((int)ReservationPeriodType.Free)">Slobodan termin</SelectItem>
+                        @*<SelectItem Value="@((int)ReservationPeriodType.Closed)">Zatvoreno</SelectItem>*@
+                        <SelectItem Value="@((int)ReservationPeriodType.Reserved)">Rezerviran termin (Bez informacije kojem korisniku)</SelectItem>
+                    </Select>
+                </Field>
+
+                <Field>
+                    <Switch TValue="bool" Checked="@ModalCreatePeriod.IsConfirmed" Disabled="true">Rezervacija potvrđena</Switch>
+                </Field>
 
                 Dodati Button za odbijanje rezervacije korisnika - resetirati user na reservationu
             </ModalBody>
         }
         <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="@HideEditModal">Close</Button>
-            <Button Color="Color.Primary" Clicked="@UpdateReservation">Save Changes</Button>
+            <Button Color="Color.Secondary" Clicked="@HideCreateModal">Close</Button>
+            <Button Color="Color.Primary" Clicked="@CreateReservation">Save Changes</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>
@@ -136,15 +227,19 @@
         height: 499px;
         max-height: 500px;
     }
+
+    .cellDisabled {
+        background-color: slategrey;
+    }
 </style>
 
 @code {
     [Parameter]
     public ReservationEvent ReservationEvent { get; set; }
-    //[Parameter]
-    //public string UserId { get; set; }
-    //[Parameter]
-    //public string UserName { get; set; }
+    [Parameter]
+    public string UserId { get; set; }
+    [Parameter]
+    public string UserName { get; set; }
     [Parameter]
     public bool IsOwner { get; set; }
 
@@ -155,14 +250,17 @@
     private Modal editModalRef;
     private ReservationPeriod ModalEditPeriod;
 
+    private Modal createModalRef;
+    private ReservationPeriod ModalCreatePeriod;
+
     private bool ShowErrorPopup;
     private string ErrorMessage;
 
-    DateTime FirstDay;
-    DateTime Today;
-    List<string> DaysOfTheWeek;
-    List<string> HoursOfTheDay;
-    int numberOfHoursInADay = 24;
+    private DateTime FirstDay;
+    private DateTime Today;
+    private List<string> DaysOfTheWeek;
+    private List<string> HoursOfTheDay;
+    private int numberOfHoursInADay = 24;
 
     protected override async Task OnInitializedAsync()
     {
@@ -175,6 +273,8 @@
             ThisWeeksPeriods = GroupThisWeekPeriodsByHour();
         }
     }
+
+    #region Initializing data
 
     private List<string> InitializeDaysOfTheWeek()
     {
@@ -203,36 +303,6 @@
 
         return hours;
     }
-
-    private DateTime GetModayAccordingTo(DateTime now)
-    {
-        int delta = DayOfWeek.Monday - now.DayOfWeek;
-        if (delta > 0)
-            delta -= 7;
-        DateTime monday = now.AddDays(delta);
-
-        return monday;
-    }
-
-    private void WeekBefore()
-    {
-        FirstDay = GetModayAccordingTo(FirstDay.AddDays(-7));
-        ThisWeeksPeriods = GroupThisWeekPeriodsByHour();
-    }
-
-    private void WeekAfter()
-    {
-        FirstDay = GetModayAccordingTo(FirstDay.AddDays(7));
-        ThisWeeksPeriods = GroupThisWeekPeriodsByHour();
-    }
-
-    private void OpenPopupForAdministration(ReservationPeriod reservationPeriod)
-    {
-        ModalEditPeriod = reservationPeriod;
-
-        ShowEditModal();
-    }
-
     IEnumerable<IGrouping<TimeSpan, ReservationPeriod>> GroupThisWeekPeriodsByHour()
     {
         var allPeriods = ReservationEvent.ReservationPeriods;
@@ -288,7 +358,54 @@
         public TKey Key { get; }
     }
 
+    private DateTime GetModayAccordingTo(DateTime now)
+    {
+        int delta = DayOfWeek.Monday - now.DayOfWeek;
+        if (delta > 0)
+            delta -= 7;
+        DateTime monday = now.AddDays(delta);
+
+        return monday;
+    }
+
+    #endregion
+
+    #region Calendar Utility
+
+    private void WeekBefore()
+    {
+        FirstDay = GetModayAccordingTo(FirstDay.AddDays(-7));
+        ThisWeeksPeriods = GroupThisWeekPeriodsByHour();
+    }
+
+    private void WeekAfter()
+    {
+        FirstDay = GetModayAccordingTo(FirstDay.AddDays(7));
+        ThisWeeksPeriods = GroupThisWeekPeriodsByHour();
+    }
+
+    private ReservationPeriod GetReservationPeriod(IEnumerable<ReservationPeriod> input, int index)
+    {
+        return input.ToList().FirstOrDefault(x => GetDaysIndex(x.From) == index);
+    }
+
+    private int GetDaysIndex(DateTime day)
+    {
+        var index = (int)day.DayOfWeek - 1;
+
+        return index < 0 ? 7 : index;
+    }
+
+    #endregion
+
     #region Edit Modal
+
+    private void OpenPopupForAdministration(ReservationPeriod reservationPeriod)
+    {
+        ModalEditPeriod = reservationPeriod;
+
+        ShowEditModal();
+    }
 
     private void ShowEditModal()
     {
@@ -316,7 +433,8 @@
             (
                 new UpdateReservationPeriodRequest
                 {
-                    ReservationPeriod = ModalEditPeriod
+                    ReservationPeriod = ModalEditPeriod,
+                    UserId = IsOwner ? null : UserId
                 }
             );
 
@@ -329,6 +447,65 @@
             ShowPopupWithErrorMessage(response.ErrorMessage);
         }
 
+    }
+
+    #endregion
+
+    #region Create Modal
+
+    void OpenPopupForNewPeriod(TimeSpan time, int dayOfWeek)
+    {
+        var date = FirstDay.AddDays(dayOfWeek);
+        var dateTime = new DateTime(date.Year, date.Month, date.Day, time.Hours, time.Minutes, time.Seconds);
+        var stepInMinutes = ReservationEvent.ReservationDurationType == ReservationDurationType.HalfHour ? 30 : 60;
+
+        ModalCreatePeriod = new ReservationPeriod
+            (
+            dateTime,
+            dateTime.AddMinutes(stepInMinutes),
+            ReservationPeriodType.Closed,
+            null,
+            ReservationEvent.Id
+            );
+
+        ShowCreateModal();
+    }
+
+    private void ShowCreateModal()
+    {
+        createModalRef.Show();
+    }
+
+    private void HideCreateModal()
+    {
+        createModalRef.Hide();
+    }
+
+    async Task CreateReservation()
+    {
+        var response = await ReservationPeriodService.CreateReservationPeriodsAsync
+            (
+                new CreateReservationPeriodRequest
+                {
+                    ReservationPeriod = ModalCreatePeriod,
+                    UserId = IsOwner ? null : UserId
+                }
+            );
+
+        if (response.Success)
+        {
+            HideCreateModal();
+        }
+        else
+        {
+            ShowPopupWithErrorMessage(response.ErrorMessage);
+        }
+
+    }
+
+    void OnSelectedValueChangedReservationPeriodTypeForCreate(int value)
+    {
+        ModalCreatePeriod.SetReservationPeriodType((ReservationPeriodType)value);
     }
 
     #endregion

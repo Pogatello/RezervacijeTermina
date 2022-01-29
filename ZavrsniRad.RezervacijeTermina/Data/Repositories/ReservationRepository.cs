@@ -85,6 +85,14 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Repositories
 			return reservationPeriod;
 		}
 
+		public async Task<ReservationPeriod> DeleteReservationPeriodAsync(ReservationPeriod reservationPeriod)
+		{
+			_dbContext.ReservationPeriods.Remove(reservationPeriod);
+			await _dbContext.SaveChangesAsync();
+
+			return reservationPeriod;
+		}
+
 		#endregion
 	}
 }

@@ -18,5 +18,7 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 		Task<ReservationPeriod> CreateReservationPeriodAsync(ReservationPeriod reservationPeriod);
 
 		Task<ReservationPeriod> UpdateReservationPeriodAsync(ReservationPeriod reservationPeriod);
+
+		Task<ReservationPeriod> DeleteReservationPeriodAsync(ReservationPeriod reservationPeriod);
 	}
 }
