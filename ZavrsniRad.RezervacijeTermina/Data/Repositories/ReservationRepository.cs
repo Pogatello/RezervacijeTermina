@@ -29,7 +29,10 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Repositories
 		{
 			return await _dbContext.ReservationEvents
 				.Where(res => res.ReservationPeriods
-				.Any(rp => rp.User.Id == userId))
+					.Any(rp => rp.User.Id == userId)
+					)
+				.Include(x => x.ReservationPeriods).ThenInclude(x => x.User)
+				.Include(x => x.AttachmentLogo)
 				.ToListAsync();
 		}
 
@@ -37,12 +40,16 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Repositories
 		{
 			return await _dbContext.ReservationEvents
 				.Where(res => res.User.Id == userId)
+				.Include(x => x.ReservationPeriods).ThenInclude(x => x.User)
+				.Include(x => x.AttachmentLogo)
 				.ToListAsync();
 		}
 
 		public async Task<ReservationEvent> GetReservationEventByIdAsync(long eventId)
 		{
 			return await _dbContext.ReservationEvents
+				.Include(x => x.ReservationPeriods).ThenInclude(x => x.User)
+				.Include(x => x.AttachmentLogo)
 				.SingleOrDefaultAsync(res => res.Id == eventId);
 		}
 
@@ -60,6 +67,22 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Repositories
 			await _dbContext.SaveChangesAsync();
 
 			return reservationEvent;
+		}
+
+		public async Task<ReservationPeriod> CreateReservationPeriodAsync(ReservationPeriod reservationPeriod)
+		{
+			_dbContext.ReservationPeriods.Add(reservationPeriod);
+			await _dbContext.SaveChangesAsync();
+
+			return reservationPeriod;
+		}
+
+		public async Task<ReservationPeriod> UpdateReservationPeriodAsync(ReservationPeriod reservationPeriod)
+		{
+			_dbContext.ReservationPeriods.Update(reservationPeriod);
+			await _dbContext.SaveChangesAsync();
+
+			return reservationPeriod;
 		}
 
 		#endregion

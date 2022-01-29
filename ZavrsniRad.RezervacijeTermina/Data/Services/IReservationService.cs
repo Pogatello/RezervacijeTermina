@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using ZavrsniRad.RezervacijeTermina.Data.Messaging.ReservationEvent.Request;
 using ZavrsniRad.RezervacijeTermina.Data.Messaging.ReservationEvent.Response;
 

@@ -17,6 +17,10 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 		[Required]
 		public DateTime To { get; private set; }
 
+		public bool ReservationMade { get; private set; }
+
+		public DateTime? ReservationMadeAt { get; private set; }
+
 		public bool IsConfirmed { get; private set; }
 
 		public ReservationPeriodType ReservationPeriodType { get; private set; }
@@ -49,6 +53,20 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 			ReservationPeriodType = reservationPeriodType;
 			UserId = userId;
 			ReservationEventId = reservationEventId;
+		}
+
+		#endregion
+
+		#region Public Methods
+
+		public void SetReservationPeriodType(ReservationPeriodType reservationPeriodType)
+		{
+			ReservationPeriodType = reservationPeriodType;
+		}
+
+		public void SetIsConfirmed(bool isConfirmed)
+		{
+			IsConfirmed = isConfirmed;
 		}
 
 		#endregion

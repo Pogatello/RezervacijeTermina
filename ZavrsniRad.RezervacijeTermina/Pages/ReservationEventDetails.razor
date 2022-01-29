@@ -9,39 +9,66 @@
 @using Blazorise
 @using System
 @using System.IO;
+@using System.Security.Claims
 @using System.Text;
-
+@using Pages.Shared.Components
+@using ZavrsniRad.RezervacijeTermina.Pages.Shared.Components
 @inject IReservationService ReservationService
 
 <AuthorizeView>
     <Authorized Context="Auth">
-        <Container>
-            <h3>ReservationEventDetails</h3>
+        @if (IsLoading)
+        {
+            <p>Please wait</p>
+        }
+        else
+        {
+            <Container>
+                <Row>
+                    <h3>ReservationEventDetails</h3>
 
-            <label>@ReservationEvent.Caption</label>
+                    <Column>
+                        <label>@ReservationEvent.Caption</label>
+                        <br />
+                        <label>@ReservationEvent.Description</label>
+                    </Column>
+                    <Column>
+                        @if (ReservationEvent.AttachmentLogo != null)
+                        {
+                            <img src="data:image/png;base64,@ReservationEvent.AttachmentLogo.Content" />
+                        }
+                    </Column>
+                </Row>
+                <Row>
 
-            @if (showPopup)
-            {
-                <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="titleLabel">Response</h5>
-                                <button type="button" class="close" @onclick="@ClosePopup" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">×</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                @ErrorMessage
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" @onclick="@ClosePopup" data-dismiss="modal">Close</button>
+                    <CalendarScheduler ReservationEvent=@ReservationEvent IsOwner=@IsOwner></CalendarScheduler>
+                </Row>
+
+                <br />
+
+                @if (showPopup)
+                {
+                    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="titleLabel">Response</h5>
+                                    <button type="button" class="close" @onclick="@ClosePopup" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    @ErrorMessage
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" @onclick="@ClosePopup" data-dismiss="modal">Close</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            }
-        </Container>
+                }
+            </Container>
+        }
     </Authorized>
     <NotAuthorized>
     </NotAuthorized>
@@ -49,31 +76,47 @@
 
 @code {
     [Parameter]
-    public long Id { get; set; }
+    public string Id { get; set; }
 
     [CascadingParameter]
     private Task<AuthenticationState> AuthenticationStateTask { get; set; }
 
     ReservationEvent ReservationEvent;
+    string UserId;
+    string UserName;
+
     bool IsOwner;
     string ErrorMessage;
     bool showPopup;
+    bool IsLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateTask;
-        var userId = authState.User.Identity.Name;
+        UserId = authState.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+        UserName = authState.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
 
-        if (userId == ReservationEvent.UserId)
-        {
-            IsOwner = true;
-        }
-
-        var response = await ReservationService.GetReservationEventByIdAsync(new GetReservationEventRequest { Id = Id, UserId = userId });
+        var response = await ReservationService.GetReservationEventByIdAsync
+            (new GetReservationEventRequest
+            {
+                Id = Convert.ToInt64(Id),
+                UserId = UserId
+            }
+            );
 
         if (response.Success)
         {
             ReservationEvent = response.ReservationEvent;
+
+            if (ReservationEvent != null)
+            {
+                if (UserId == ReservationEvent.UserId)
+                {
+                    IsOwner = true;
+                }
+
+                IsLoading = false;
+            }
         }
         else
         {

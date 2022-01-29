@@ -1,0 +1,340 @@
+﻿@using Blazorise
+@using System
+@using System.Globalization
+@using System.Linq
+@using ZavrsniRad.RezervacijeTermina.Data.Models
+@using ZavrsniRad.RezervacijeTermina.Data.Services
+@using Microsoft.AspNetCore.Identity
+@using Data.Messaging.ReservationPeriod.Request;
+
+@inject IReservationPeriodService ReservationPeriodService
+
+<h3>Calendar</h3>
+
+<div Class="maxHeight">
+    <Button Color="Color.Primary" Clicked="@WeekBefore">Before</Button>
+    <Button Color="Color.Primary" Clicked="@WeekAfter">After</Button>
+    <Container>
+        @*Make Header*@
+        <Row>
+            <Column>
+                @*empty column for times*@
+            </Column>
+            @foreach (var day in DaysOfTheWeek.Select((x, i) => new { Value = x, Index = i }))
+            {
+                <Column Class="@(FirstDay.AddDays(day.Index).Date == Today.Date ? "todayBolded" : "")">
+                    @day.Value
+                    @FirstDay.AddDays(day.Index).ToString("dd.MM.yyyy")
+                </Column>
+            }
+        </Row>
+
+        @*Make RestOfThe grid V2*@
+        @foreach (var periodGroup in ThisWeeksPeriods)
+        {
+            <Row>
+                <Column>
+                    <p>@periodGroup.Key.ToString(@"hh\:mm")</p>
+                </Column>
+                @*//if data is not for a full week, fill with empty cells*@
+                @if (periodGroup.Count() < 7)
+                {
+                    for (int i = 0; i < 7 - periodGroup.Count(); i++)
+                    {
+                        <Column>
+                        </Column>
+                    }
+                }
+                @foreach (var periodPerHour in periodGroup)
+                {
+                    <Column @onclick="() => OpenPopupForAdministration(periodPerHour)">
+                        Id: @periodPerHour.Id
+                    </Column>
+                }
+            </Row>
+        }
+    </Container>
+</div>
+
+<Modal @ref="editModalRef">
+    <ModalContent Centered="true">
+        <ModalHeader>
+            <ModalTitle>Uređivanje termina</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            @if (IsOwner)
+            {
+
+                <Field>
+                    @if (ModalEditPeriod.User != null)
+                    {
+                        <FieldLabel>Termin rezerviran od strane korisnika @ModalEditPeriod.User.UserName</FieldLabel>
+                    }
+                    else
+                    {
+                        <FieldLabel>Termin kreiran od strane sustava</FieldLabel>
+                    }
+                </Field>
+
+                <Field>
+                    <FieldLabel>Tip termina</FieldLabel>
+                    <Select TValue="int" SelectedValue="@((int)ModalEditPeriod.ReservationPeriodType)" SelectedValueChanged="@OnSelectedValueChangedReservationPeriodType">
+                        <SelectItem Value="@((int)ReservationPeriodType.Closed)">Zatvoreno</SelectItem>
+                        <SelectItem Value="@((int)ReservationPeriodType.Reserved)">Rezerviran termin</SelectItem>
+                        <SelectItem Value="@((int)ReservationPeriodType.Free)">Slobodan termin</SelectItem>
+                    </Select>
+                </Field>
+
+                <Field>
+                    <Switch TValue="bool" Checked="@ModalEditPeriod.IsConfirmed" CheckedChanged="@OnIsConfirmedChanged">Rezervacija potvrđena</Switch>
+                </Field>
+            }
+
+            Dodati Button za odbijanje rezervacije korisnika - resetirati user na reservationu
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideEditModal">Close</Button>
+            <Button Color="Color.Primary" Clicked="@UpdateReservation">Save Changes</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@if (ShowErrorPopup)
+{
+    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="titleLabel">Response</h5>
+                    <button type="button" class="close" @onclick="@ClosePopup" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @ErrorMessage
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="@ClosePopup" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+<style>
+    .todayBolded {
+        /*ADD BORDERS TO TODAY*/
+        font-weight: bold
+    }
+
+    .maxHeight {
+        height: 499px;
+        max-height: 500px;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public ReservationEvent ReservationEvent { get; set; }
+    [Parameter]
+    public string UserId { get; set; }
+    [Parameter]
+    public string UserName { get; set; }
+    [Parameter]
+    public bool IsOwner { get; set; }
+
+    private IEnumerable<IGrouping<TimeSpan, ReservationPeriod>> ThisWeeksPeriods { get; set; }
+
+    private Modal editModalRef;
+    private ReservationPeriod ModalEditPeriod;
+
+    private bool ShowErrorPopup;
+    private string ErrorMessage;
+
+    DateTime FirstDay;
+    DateTime Today;
+    List<string> DaysOfTheWeek;
+    List<string> HoursOfTheDay;
+    int numberOfHoursInADay = 24;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Today = DateTime.Now;
+        FirstDay = GetModayAccordingTo(Today);
+        DaysOfTheWeek = InitializeDaysOfTheWeek();
+        HoursOfTheDay = InitializeHoursOfTheDay();
+        ThisWeeksPeriods = GroupThisWeekPeriodsByHour();
+    }
+
+    private List<string> InitializeDaysOfTheWeek()
+    {
+        return new List<string>{
+            "Ponedjeljak",
+            "Utorak",
+            "Srijeda",
+            "Četvrtak",
+            "Petak",
+            "Subota",
+            "Nedjelja"
+          };
+    }
+
+    private List<string> InitializeHoursOfTheDay()
+    {
+        var hours = new List<string>();
+
+        var day = DateTime.Now.Date;
+
+        while (day.Date == DateTime.Now.Date)
+        {
+            hours.Add(day.ToString("HH:mm"));
+            day = day.AddHours(1);
+        }
+
+        return hours;
+    }
+
+    private DateTime GetModayAccordingTo(DateTime now)
+    {
+        int delta = DayOfWeek.Monday - now.DayOfWeek;
+        if (delta > 0)
+            delta -= 7;
+        DateTime monday = now.AddDays(delta);
+
+        return monday;
+    }
+
+    private void WeekBefore()
+    {
+        FirstDay = GetModayAccordingTo(FirstDay.AddDays(-7));
+        ThisWeeksPeriods = GroupThisWeekPeriodsByHour();
+    }
+
+    private void WeekAfter()
+    {
+        FirstDay = GetModayAccordingTo(FirstDay.AddDays(7));
+        ThisWeeksPeriods = GroupThisWeekPeriodsByHour();
+    }
+
+    private void OpenPopupForAdministration(ReservationPeriod reservationPeriod)
+    {
+        ModalEditPeriod = reservationPeriod;
+
+        ShowEditModal();
+    }
+
+    IEnumerable<IGrouping<TimeSpan, ReservationPeriod>> GroupThisWeekPeriodsByHour()
+    {
+        var allPeriods = ReservationEvent.ReservationPeriods;
+
+        var groupedPeriods = allPeriods
+            .Where(x =>
+                x.From.Date >= FirstDay.Date
+                && x.From.Date < FirstDay.AddDays(7).Date
+                )
+            .OrderBy(x => x.From)
+            .GroupBy(x => x.From.TimeOfDay)
+            .ToList();
+
+        return FillMissingTimeStamps(groupedPeriods);
+
+    }
+
+    IEnumerable<Grouping<TimeSpan, ReservationPeriod>> FillMissingTimeStamps(IEnumerable<IGrouping<TimeSpan, ReservationPeriod>> groupedPeriods)
+    {
+        var result = new List<Grouping<TimeSpan, ReservationPeriod>>();
+        //used only for generating a nice time table;
+
+        var startingTime = DateTime.Now.Date;
+        var endTime = DateTime.Now.Date.AddDays(1);
+        var stepInMinutes = ReservationEvent.ReservationDurationType == ReservationDurationType.HalfHour ? 30 : 60;
+
+        while (startingTime.Date != endTime.Date)
+        {
+            var groupFound = groupedPeriods.SingleOrDefault(x => x.Key == startingTime.TimeOfDay);
+
+            if (groupFound == null)
+            {
+                result.Add(new Grouping<TimeSpan, ReservationPeriod>(startingTime.TimeOfDay, new List<ReservationPeriod>()));
+            }
+            else
+            {
+                result.Add(new Grouping<TimeSpan, ReservationPeriod>(groupFound.Key, groupFound));
+
+            }
+
+            startingTime = startingTime.AddMinutes(stepInMinutes);
+        }
+
+        return result;
+    }
+
+    public class Grouping<TKey, TElement> : List<TElement>, IGrouping<TKey, TElement>
+    {
+        public Grouping(TKey key) : base() => Key = key;
+        public Grouping(TKey key, int capacity) : base(capacity) => Key = key;
+        public Grouping(TKey key, IEnumerable<TElement> collection)
+            : base(collection) => Key = key;
+        public TKey Key { get; }
+    }
+
+    #region Edit Modal
+
+    private void ShowEditModal()
+    {
+        editModalRef.Show();
+    }
+
+    private void HideEditModal()
+    {
+        editModalRef.Hide();
+    }
+
+    void OnSelectedValueChangedReservationPeriodType(int value)
+    {
+        ModalEditPeriod.SetReservationPeriodType((ReservationPeriodType)value);
+    }
+
+    void OnIsConfirmedChanged(bool value)
+    {
+        ModalEditPeriod.SetIsConfirmed(value);
+    }
+
+    async Task UpdateReservation()
+    {
+        var response = await ReservationPeriodService.UpdateReservationPeriodsAsync
+            (
+                new UpdateReservationPeriodRequest
+                {
+                    ReservationPeriod = ModalEditPeriod
+                }
+            );
+
+        if (response.Success)
+        {
+            HideEditModal();
+        }
+        else
+        {
+            ShowPopupWithErrorMessage(response.ErrorMessage);
+        }
+
+    }
+
+    #endregion
+
+    #region Error Popup
+
+    void ShowPopupWithErrorMessage(string message)
+    {
+        ErrorMessage = message;
+        ShowErrorPopup = true;
+    }
+
+    void ClosePopup()
+    {
+        ShowErrorPopup = false;
+    }
+
+    #endregion
+}
