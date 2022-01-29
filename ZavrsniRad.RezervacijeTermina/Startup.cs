@@ -55,6 +55,7 @@ namespace ZavrsniRad.RezervacijeTermina
 			#region Configure Services
 
 			services.AddTransient<IReservationService, ReservationService>();
+			services.AddTransient<IReservationPeriodService, ReservationPeriodService>();
 			services.AddTransient<IEncryptionService, EncryptionService>();
 
 			#endregion

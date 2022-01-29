@@ -15,14 +15,14 @@
 @using ZavrsniRad.RezervacijeTermina.Pages.Shared.Components
 @inject IReservationService ReservationService
 
-<AuthorizeView>
-    <Authorized Context="Auth">
-        @if (IsLoading)
-        {
-            <p>Please wait</p>
-        }
-        else
-        {
+@if (IsLoading)
+{
+    <p>Please wait</p>
+}
+else
+{
+    <AuthorizeView>
+        <Authorized Context="Auth">
             <Container>
                 <Row>
                     <h3>ReservationEventDetails</h3>
@@ -40,8 +40,11 @@
                     </Column>
                 </Row>
                 <Row>
-
-                    <CalendarScheduler ReservationEvent=@ReservationEvent IsOwner=@IsOwner></CalendarScheduler>
+                    @if (ReservationEvent != null)
+                    {
+                        @*<CalendarScheduler ReservationEvent=@ReservationEvent IsOwner=@IsOwner UserId=@UserId UserName=@UserName></CalendarScheduler>*@
+                        <CalendarScheduler ReservationEvent=@ReservationEvent IsOwner=@IsOwner ></CalendarScheduler>
+                    }
                 </Row>
 
                 <br />
@@ -68,11 +71,11 @@
                     </div>
                 }
             </Container>
-        }
-    </Authorized>
-    <NotAuthorized>
-    </NotAuthorized>
-</AuthorizeView>
+        </Authorized>
+        <NotAuthorized>
+        </NotAuthorized>
+    </AuthorizeView>
+}
 
 @code {
     [Parameter]
@@ -97,7 +100,8 @@
         UserName = authState.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
 
         var response = await ReservationService.GetReservationEventByIdAsync
-            (new GetReservationEventRequest
+            (
+            new GetReservationEventRequest
             {
                 Id = Convert.ToInt64(Id),
                 UserId = UserId

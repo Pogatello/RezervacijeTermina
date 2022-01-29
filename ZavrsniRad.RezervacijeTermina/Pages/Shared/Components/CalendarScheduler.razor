@@ -11,7 +11,7 @@
 
 <h3>Calendar</h3>
 
-<div Class="maxHeight">
+<div>
     <Button Color="Color.Primary" Clicked="@WeekBefore">Before</Button>
     <Button Color="Color.Primary" Clicked="@WeekAfter">After</Button>
     <Container>
@@ -62,37 +62,40 @@
             <ModalTitle>Uređivanje termina</ModalTitle>
             <CloseButton />
         </ModalHeader>
-        <ModalBody>
-            @if (IsOwner)
-            {
+        @if (ModalEditPeriod != null)
+        {
+            <ModalBody>
+                @if (IsOwner)
+                {
 
-                <Field>
-                    @if (ModalEditPeriod.User != null)
-                    {
-                        <FieldLabel>Termin rezerviran od strane korisnika @ModalEditPeriod.User.UserName</FieldLabel>
-                    }
-                    else
-                    {
-                        <FieldLabel>Termin kreiran od strane sustava</FieldLabel>
-                    }
-                </Field>
+                    <Field>
+                        @if (ModalEditPeriod?.User != null)
+                        {
+                            <FieldLabel>Termin rezerviran od strane korisnika @ModalEditPeriod.User.UserName</FieldLabel>
+                        }
+                        else
+                        {
+                            <FieldLabel>Termin kreiran od strane sustava</FieldLabel>
+                        }
+                    </Field>
 
-                <Field>
-                    <FieldLabel>Tip termina</FieldLabel>
-                    <Select TValue="int" SelectedValue="@((int)ModalEditPeriod.ReservationPeriodType)" SelectedValueChanged="@OnSelectedValueChangedReservationPeriodType">
-                        <SelectItem Value="@((int)ReservationPeriodType.Closed)">Zatvoreno</SelectItem>
-                        <SelectItem Value="@((int)ReservationPeriodType.Reserved)">Rezerviran termin</SelectItem>
-                        <SelectItem Value="@((int)ReservationPeriodType.Free)">Slobodan termin</SelectItem>
-                    </Select>
-                </Field>
+                    <Field>
+                        <FieldLabel>Tip termina</FieldLabel>
+                        <Select TValue="int" SelectedValue="@((int)ModalEditPeriod.ReservationPeriodType)" SelectedValueChanged="@OnSelectedValueChangedReservationPeriodType">
+                            <SelectItem Value="@((int)ReservationPeriodType.Closed)">Zatvoreno</SelectItem>
+                            <SelectItem Value="@((int)ReservationPeriodType.Reserved)">Rezerviran termin</SelectItem>
+                            <SelectItem Value="@((int)ReservationPeriodType.Free)">Slobodan termin</SelectItem>
+                        </Select>
+                    </Field>
 
-                <Field>
-                    <Switch TValue="bool" Checked="@ModalEditPeriod.IsConfirmed" CheckedChanged="@OnIsConfirmedChanged">Rezervacija potvrđena</Switch>
-                </Field>
-            }
+                    <Field>
+                        <Switch TValue="bool" Checked="@ModalEditPeriod.IsConfirmed" CheckedChanged="@OnIsConfirmedChanged">Rezervacija potvrđena</Switch>
+                    </Field>
+                }
 
-            Dodati Button za odbijanje rezervacije korisnika - resetirati user na reservationu
-        </ModalBody>
+                Dodati Button za odbijanje rezervacije korisnika - resetirati user na reservationu
+            </ModalBody>
+        }
         <ModalFooter>
             <Button Color="Color.Secondary" Clicked="@HideEditModal">Close</Button>
             <Button Color="Color.Primary" Clicked="@UpdateReservation">Save Changes</Button>
@@ -120,7 +123,9 @@
             </div>
         </div>
     </div>
+
 }
+
 <style>
     .todayBolded {
         /*ADD BORDERS TO TODAY*/
@@ -136,12 +141,14 @@
 @code {
     [Parameter]
     public ReservationEvent ReservationEvent { get; set; }
-    [Parameter]
-    public string UserId { get; set; }
-    [Parameter]
-    public string UserName { get; set; }
+    //[Parameter]
+    //public string UserId { get; set; }
+    //[Parameter]
+    //public string UserName { get; set; }
     [Parameter]
     public bool IsOwner { get; set; }
+
+    public bool IsLoading { get; set; }
 
     private IEnumerable<IGrouping<TimeSpan, ReservationPeriod>> ThisWeeksPeriods { get; set; }
 
@@ -159,11 +166,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Today = DateTime.Now;
-        FirstDay = GetModayAccordingTo(Today);
-        DaysOfTheWeek = InitializeDaysOfTheWeek();
-        HoursOfTheDay = InitializeHoursOfTheDay();
-        ThisWeeksPeriods = GroupThisWeekPeriodsByHour();
+        if (ReservationEvent != null)
+        {
+            Today = DateTime.Now;
+            FirstDay = GetModayAccordingTo(Today);
+            DaysOfTheWeek = InitializeDaysOfTheWeek();
+            HoursOfTheDay = InitializeHoursOfTheDay();
+            ThisWeeksPeriods = GroupThisWeekPeriodsByHour();
+        }
     }
 
     private List<string> InitializeDaysOfTheWeek()
@@ -337,4 +347,5 @@
     }
 
     #endregion
+
 }
