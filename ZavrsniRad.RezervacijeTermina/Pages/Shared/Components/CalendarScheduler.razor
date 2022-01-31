@@ -8,17 +8,15 @@
 @using Data.Messaging.ReservationPeriod.Request;
 
 @inject IReservationPeriodService ReservationPeriodService
-
-<h3>Calendar</h3>
+@inject IJSRuntime JS
 
 <div>
-    <Button Color="Color.Primary" Clicked="@WeekBefore">Before</Button>
-    <Button Color="Color.Primary" Clicked="@WeekAfter">After</Button>
+    @*Make Header*@
     <Container>
-        @*Make Header*@
         <Row>
             <Column>
-                @*empty column for times*@
+                <Button Color="Color.Primary" Clicked="@WeekBefore">&lt;</Button>
+                <Button Color="Color.Primary" Clicked="@WeekAfter">></Button>
             </Column>
             @foreach (var day in DaysOfTheWeek.Select((x, i) => new { Value = x, Index = i }))
             {
@@ -30,42 +28,45 @@
         </Row>
 
         @*Make RestOfThe grid V2*@
-        @foreach (var periodGroup in ThisWeeksPeriods)
-        {
-            <Row>
-                <Column>
-                    <p>@periodGroup.Key.ToString(@"hh\:mm")</p>
-                </Column>
+        <div id="scrollableCalendarDiv" style="overflow-y: auto; overflow-x: hidden; height: 450px;">
+            @foreach (var periodGroup in ThisWeeksPeriods)
+            {
+                <Row Id="@periodGroup.Key.ToString(@"hh\:mm")">
+                    <Column>
+                        <p>@periodGroup.Key.ToString(@"hh\:mm")</p>
+                    </Column>
 
-                @for (int i = 0; i < 7; i++)
-                {
-                    int indexBuffer = i;
-                    var resPeriod = GetReservationPeriod(periodGroup, indexBuffer);
+                    @for (int i = 0; i < 7; i++)
+                    {
+                        int indexBuffer = i;
+                        var resPeriod = GetReservationPeriod(periodGroup, indexBuffer);
 
-                    @if (resPeriod != null)
-                    {
-                        <Column @onclick="() => OpenPopupForAdministration(resPeriod)">
-                            Id: @resPeriod.Id
-                        </Column>
-                    }
-                    else
-                    {
-                        @if (IsOwner)
+                        @if (resPeriod != null)
                         {
-                            <Column Class="cellDisabled" @onclick="() => OpenPopupForNewPeriod(periodGroup.Key, indexBuffer)">
+                            <Column @onclick="() => OpenPopupForAdministration(resPeriod)">
+                                Id: @resPeriod.Id
                             </Column>
                         }
                         else
                         {
-                            <Column Class="cellDisabled">
-                            </Column>
+                            @if (IsOwner)
+                            {
+                                <Column Class="cellDisabled" @onclick="() => OpenPopupForNewPeriod(periodGroup.Key, indexBuffer)">
+                                </Column>
+                            }
+                            else
+                            {
+                                <Column Class="cellDisabled">
+                                </Column>
+                            }
                         }
                     }
-                }
-            </Row>
-        }
+                </Row>
+            }
+        </div>
     </Container>
 </div>
+
 <Modal @ref="editModalRef">
 
     @if (ModalEditPeriod != null)
@@ -293,6 +294,8 @@
     private List<string> HoursOfTheDay;
     private int numberOfHoursInADay = 24;
 
+    public string FirstCalendarCellLocation { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         if (ReservationEvent != null)
@@ -302,7 +305,14 @@
             DaysOfTheWeek = InitializeDaysOfTheWeek();
             HoursOfTheDay = InitializeHoursOfTheDay();
             ThisWeeksPeriods = GroupThisWeekPeriodsByHour();
+            FirstCalendarCellLocation = ThisWeeksPeriods.Where(x => x.Any()).Min(x => x.Key).ToString(@"hh\:mm");
         }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await JS.InvokeVoidAsync("blazorHelpers.scrollToFragment", FirstCalendarCellLocation);
     }
 
     #region Initializing data
@@ -407,12 +417,15 @@
     {
         FirstDay = GetModayAccordingTo(FirstDay.AddDays(-7));
         ThisWeeksPeriods = GroupThisWeekPeriodsByHour();
+        FirstCalendarCellLocation = ThisWeeksPeriods.Where(x => x.Any()).Min(x => x.Key).ToString(@"hh\:mm");
+
     }
 
     private void WeekAfter()
     {
         FirstDay = GetModayAccordingTo(FirstDay.AddDays(7));
         ThisWeeksPeriods = GroupThisWeekPeriodsByHour();
+        FirstCalendarCellLocation = ThisWeeksPeriods.Where(x => x.Any()).Min(x => x.Key).ToString(@"hh\:mm");
     }
 
     private ReservationPeriod GetReservationPeriod(IEnumerable<ReservationPeriod> input, int index)

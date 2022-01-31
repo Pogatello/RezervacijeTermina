@@ -1,0 +1,238 @@
+﻿@page "/reservations"
+
+@using Blazorise
+@using ZavrsniRad.RezervacijeTermina.Data.Models
+@using ZavrsniRad.RezervacijeTermina.Data.Services
+@using ZavrsniRad.RezervacijeTermina.Data.Messaging.ReservationEvent.Request
+@using ZavrsniRad.RezervacijeTermina.Data.Infrastructure
+@using Microsoft.AspNetCore.Identity
+@using System
+@using System.IO;
+@using System.Security.Claims
+@using System.Text;
+@using Pages.Shared.Components
+
+@inject IReservationService ReservationService
+@inject NavigationManager NavigationManager
+
+@if (Loading)
+{
+    <div class="spinner"></div>
+}
+else
+{
+    <Switch TValue="bool" Checked="@FilterReservationsImAttending" CheckedChanged="@OnFilterReservationsImAttending">Prikaži samo rezervacije na kojima sudjelujem</Switch>
+    <Container>
+        @if (!ReservationEvents.HasElements())
+        {
+            <Container>
+                <Row>
+                    <Column Class="noReservations">Nema rezervacija za pregled</Column>
+                </Row>
+            </Container>
+        }
+        else
+        {
+            @foreach (var reservation in ReservationEvents)
+            {
+                <Row Class="reservationContainer">
+                    <Column>
+                        <Row><Column Class="reservationContainerHeader"><a href="details/@(reservation.Id)">@reservation.Caption</a></Column></Row>
+                        <Row>
+                            <Column Class="reservationContainerBody">
+                                <Row><p>Opis: </p><p>@reservation.Description</p><br /></Row>
+                                <Row>Vlasnik: @reservation?.User?.UserName</Row>
+                                <Row>Kontakt: @reservation.AdditionalContact</Row>
+                                <Row>
+                                    Aktivno: Od @reservation.ActiveFrom.ToString("dd.MM.yyyy") @if (reservation.ActiveTo != null)
+                                    {<span> Do @reservation.ActiveTo.Value.ToString("dd.MM.yyyy") </span>}
+                                </Row>
+
+                                @if (reservation.CanUserMakeReservation)
+                                {
+                                    <Row>Napomena: Korisnik može sam napraviti rezervaciju u nekom od slobodnih termina</Row>
+                                    @if (reservation.IsReservationConfirmationNeeded)
+                                    {
+                                        <Row>Napomena: Vlasnik termina mora potvrditi rezervaciju.</Row>
+                                    }
+                                }
+                                else
+                                {
+                                    <Row>Napomena: Potrebno je kontaktirati vlasnika za dogovor rezervacije</Row>
+                                }
+                            </Column>
+                            @if (@reservation.AttachmentLogo != null)
+                            {
+                                <Column Class="imageContainer">
+                                    <img src="data:image/png;base64,@reservation.AttachmentLogo.Content" />
+                                </Column>
+                            }
+                        </Row>
+                        <Row><Column Class="reservationContainerFooter"><Button Color="Color.Primary" Clicked="() => NavigateToDetails(reservation.Id)">Detalji</Button></Column></Row>
+                    </Column>
+                </Row>
+            }
+        }
+    </Container>
+
+    @if (ShowErrorPopup)
+    {
+        <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="titleLabel">Response</h5>
+                        <button type="button" class="close" @onclick="@ClosePopup" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        @ErrorMessage
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="@ClosePopup" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+}
+
+<style>
+
+    .noReservations {
+        margin-top: 100px;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .reservationContainer {
+        border: 2px solid grey;
+        margin: 50px 0px;
+    }
+
+    .reservationContainerHeader {
+        border-bottom: 2px solid black;
+        margin-bottom: 5px;
+    }
+
+        .reservationContainerHeader a {
+            font-size: 18px;
+            padding: 10px 0px;
+            display: inline-block
+        }
+
+    .imageContainer {
+        height: 300px;
+    }
+
+        .imageContainer img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+    .reservationContainerBody {
+        margin: 10px;
+    }
+
+    .reservationContainerFooter {
+        padding: 10px;
+    }
+</style>
+@code {
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
+    private IEnumerable<ReservationEvent> ReservationEvents { get; set; }
+
+    private bool Loading = true;
+    public string UserId { get; set; }
+
+    private bool ShowErrorPopup { get; set; }
+    private string ErrorMessage { get; set; }
+
+    private bool FilterReservationsImAttending { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateTask;
+        UserId = authState.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        await InitializeDataAccordingToFilter();
+    }
+
+    async Task OnFilterReservationsImAttending(bool value)
+    {
+        FilterReservationsImAttending = value;
+
+        await InitializeDataAccordingToFilter();
+    }
+
+    async Task InitializeDataAccordingToFilter()
+    {
+        if (FilterReservationsImAttending)
+        {
+            var response = await ReservationService.GetReservationEventsUserParticipatesInAsync
+            (
+                new GetReservationEventsRequest
+                {
+                    UserId = UserId
+                }
+            );
+
+            if (response.Success)
+            {
+                ReservationEvents = response.ReservationEvents;
+                Loading = false;
+            }
+            else
+            {
+                ShowPopupWithErrorMessage(response.ErrorMessage);
+            }
+        }
+        else
+        {
+            var response = await ReservationService.GetAllReservationEventsWithoutUserAsync
+            (
+                new GetAllReservationEventsRequest
+                {
+                    UserId = UserId
+                }
+            );
+
+            if (response.Success)
+            {
+                ReservationEvents = response.ReservationEvents;
+                Loading = false;
+            }
+            else
+            {
+                ShowPopupWithErrorMessage(response.ErrorMessage);
+            }
+        }
+
+    }
+
+    void NavigateToDetails(long id)
+    {
+        var route = $"details/{id}";
+        NavigationManager.NavigateTo(route);
+    }
+
+    #region Error popup
+
+    void ShowPopupWithErrorMessage(string message)
+    {
+        ErrorMessage = message;
+        ShowErrorPopup = true;
+    }
+
+    void ClosePopup()
+    {
+        ShowErrorPopup = false;
+    }
+
+    #endregion
+}

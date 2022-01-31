@@ -42,6 +42,26 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Services
 
 		#region Public Methods
 
+		public async Task<GetAllReservationEventsResponse> GetAllReservationEventsWithoutUserAsync(GetAllReservationEventsRequest request)
+		{
+			var response = new GetAllReservationEventsResponse();
+
+			try
+			{
+				var reservationEvents = await _reservationRepository.GetRecentReservationEventsWithoutUserAsync(request.UserId);
+
+				response.ReservationEvents = reservationEvents;
+				response.Success = true;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, ex.Message);
+				response.ErrorMessage = ErrorMessages.DefaultError;
+			}
+
+			return response;
+		}
+
 		public async Task<GetReservationEventsResponse> GetReservationEventsUserParticipatesInAsync(GetReservationEventsRequest request)
 		{
 			var response = new GetReservationEventsResponse();

@@ -25,14 +25,27 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Repositories
 
 		#region Public Methods
 
+		public async Task<IEnumerable<ReservationEvent>> GetRecentReservationEventsWithoutUserAsync(string userId)
+		{
+			return await _dbContext.ReservationEvents
+				.Where(res => res.UserId != userId)
+				.Include(x => x.AttachmentLogo)
+				.Include(x => x.User)
+				.OrderByDescending(x => x.ActiveFrom)
+				.Take(15)
+				.ToListAsync();
+		}
+
 		public async Task<IEnumerable<ReservationEvent>> GetReservationEventsUserParticipatesInAsync(string userId)
 		{
 			return await _dbContext.ReservationEvents
 				.Where(res => res.ReservationPeriods
 					.Any(rp => rp.User.Id == userId)
+					&& res.UserId != userId
 					)
 				.Include(x => x.ReservationPeriods).ThenInclude(x => x.User)
 				.Include(x => x.AttachmentLogo)
+				.Include(x => x.User)
 				.ToListAsync();
 		}
 
@@ -40,8 +53,9 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Repositories
 		{
 			return await _dbContext.ReservationEvents
 				.Where(res => res.User.Id == userId)
-				.Include(x => x.ReservationPeriods).ThenInclude(x => x.User)
 				.Include(x => x.AttachmentLogo)
+				.Include(x => x.User)
+				.Include(x => x.ReservationPeriods)
 				.ToListAsync();
 		}
 
@@ -50,6 +64,7 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Repositories
 			return await _dbContext.ReservationEvents
 				.Include(x => x.ReservationPeriods).ThenInclude(x => x.User)
 				.Include(x => x.AttachmentLogo)
+				.Include(x => x.User)
 				.SingleOrDefaultAsync(res => res.Id == eventId);
 		}
 

@@ -55,11 +55,6 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 
 		#region Public Methods
 
-		public void SetEncodedId(string encodedId)
-		{
-			EncodedId = encodedId;
-		}
-
 		public void SetCaption(string caption)
 		{
 			Caption = caption;

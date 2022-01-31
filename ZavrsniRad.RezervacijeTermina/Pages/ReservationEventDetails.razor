@@ -3,78 +3,101 @@
 @using Blazorise
 @using ZavrsniRad.RezervacijeTermina.Data.Models
 @using ZavrsniRad.RezervacijeTermina.Data.Services
-@using ZavrsniRad.RezervacijeTermina.Data.Models
 @using ZavrsniRad.RezervacijeTermina.Data.Messaging.ReservationEvent.Request
-@using Microsoft.AspNetCore.Identity
-@using Blazorise
+@using ZavrsniRad.RezervacijeTermina.Pages.Shared.Components
 @using System
 @using System.IO;
 @using System.Security.Claims
 @using System.Text;
 @using Pages.Shared.Components
-@using ZavrsniRad.RezervacijeTermina.Pages.Shared.Components
 @inject IReservationService ReservationService
 
 @if (IsLoading)
 {
-    <p>Please wait</p>
+    <div class="spinner"></div>
 }
 else
 {
-    <AuthorizeView>
-        <Authorized Context="Auth">
-            <Container>
-                <Row>
-                    <h3>ReservationEventDetails</h3>
+    <Card Margin="Margin.Is4.OnY">
 
+        <CardBody>
+            <CardTitle Size="5">@ReservationEvent.Caption</CardTitle>
+            <br />
+            <CardText>
+
+                <Row>
                     <Column>
-                        <label>@ReservationEvent.Caption</label>
-                        <br />
-                        <label>@ReservationEvent.Description</label>
+                        <Row><p>Opis: </p><p>@ReservationEvent.Description</p><br /></Row>
+                        <Row>Vlasnik: @ReservationEvent?.User?.UserName</Row>
+                        <Row>Kontakt: @ReservationEvent.AdditionalContact</Row>
+                        <Row>
+                            Aktivno: Od @ReservationEvent.ActiveFrom.ToString("dd.MM.yyyy") @if (ReservationEvent.ActiveTo != null)
+                            {<span> Do @ReservationEvent.ActiveTo.Value.ToString("dd.MM.yyyy") </span>}
+                        </Row>
+
+                        @if (ReservationEvent.CanUserMakeReservation)
+                        {
+                            <Row>Napomena: Korisnik može sam napraviti rezervaciju u nekom od slobodnih termina</Row>
+                            @if (ReservationEvent.IsReservationConfirmationNeeded)
+                            {
+                                <Row>Napomena: Vlasnik termina mora potvrditi rezervaciju.</Row>
+                            }
+                        }
+                        else
+                        {
+                            <Row>Napomena: Potrebno je kontaktirati vlasnika za dogovor rezervacije</Row>
+                        }
                     </Column>
                     <Column>
                         @if (ReservationEvent.AttachmentLogo != null)
                         {
-                            <img src="data:image/png;base64,@ReservationEvent.AttachmentLogo.Content" />
+                            <Column Class="imageContainer">
+                                <img src="data:image/png;base64,@ReservationEvent.AttachmentLogo.Content" />
+                            </Column>
                         }
                     </Column>
                 </Row>
-                <Row>
-                    @if (ReservationEvent != null)
-                    {
-                        <CalendarScheduler ReservationEvent=@ReservationEvent IsOwner=@IsOwner UserId=@UserId UserName=@UserName></CalendarScheduler>
-                    }
-                </Row>
 
                 <br />
+                <CalendarScheduler ReservationEvent=@ReservationEvent IsOwner=@IsOwner UserId=@UserId UserName=@UserName></CalendarScheduler>
+            </CardText>
+        </CardBody>
+    </Card>
 
-                @if (showPopup)
-                {
-                    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
-                        <div class="modal-dialog" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="titleLabel">Response</h5>
-                                    <button type="button" class="close" @onclick="@ClosePopup" data-dismiss="modal" aria-label="Close">
-                                        <span aria-hidden="true">×</span>
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    @ErrorMessage
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" @onclick="@ClosePopup" data-dismiss="modal">Close</button>
-                                </div>
-                            </div>
-                        </div>
+    @if (showPopup)
+    {
+        <div class="modal fade show d-block" id="exampleModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="titleLabel">Response</h5>
+                        <button type="button" class="close" @onclick="@ClosePopup" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
                     </div>
-                }
-            </Container>
-        </Authorized>
-        <NotAuthorized>
-        </NotAuthorized>
-    </AuthorizeView>
+                    <div class="modal-body">
+                        @ErrorMessage
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="@ClosePopup" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
 }
+
+<style>
+    .imageContainer {
+        height: 200px;
+    }
+
+        .imageContainer img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+</style>
 
 @code {
     [Parameter]

@@ -66,8 +66,6 @@ namespace ZavrsniRad.RezervacijeTermina
 
 			#endregion
 
-			services.AddSingleton<WeatherForecastService>();
-
 			services.AddHttpContextAccessor();
 		}
 

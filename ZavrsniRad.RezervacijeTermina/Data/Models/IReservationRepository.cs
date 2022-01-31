@@ -5,6 +5,8 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 {
 	public interface IReservationRepository
 	{
+		Task<IEnumerable<ReservationEvent>> GetRecentReservationEventsWithoutUserAsync(string userId);
+
 		Task<IEnumerable<ReservationEvent>> GetReservationEventsUserParticipatesInAsync(string userId);
 
 		Task<IEnumerable<ReservationEvent>> GetReservationEventsCreatedByUserAsync(string userId);

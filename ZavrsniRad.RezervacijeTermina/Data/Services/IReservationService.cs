@@ -8,6 +8,8 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Services
 	{
 		public Task<GetReservationEventsResponse> GetReservationEventsUserParticipatesInAsync(GetReservationEventsRequest request);
 
+		public Task<GetAllReservationEventsResponse> GetAllReservationEventsWithoutUserAsync(GetAllReservationEventsRequest request);
+
 		public Task<GetReservationEventsResponse> GetReservationEventsCreatedByUserAsync(GetUsersReservationEventsRequest request);
 
 		public Task<GetReservationEventResponse> GetReservationEventByIdAsync(GetReservationEventRequest request);
