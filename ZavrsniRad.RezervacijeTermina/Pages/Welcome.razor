@@ -24,7 +24,7 @@
     {
         if (SignInManager.IsSignedIn(HttpContextAccessor.HttpContext.User))
         {
-            ReturnUrl = "/index";
+            ReturnUrl = "/reservations";
             NavigationManager.NavigateTo(ReturnUrl,
                forceLoad: true);
         }

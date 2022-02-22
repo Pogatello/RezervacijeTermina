@@ -12,7 +12,7 @@
 
 <div>
     @*Make Header*@
-    <Container>
+    <Container Class="containerBorder">
         <Row>
             <Column>
                 <Button Color="Color.Primary" Clicked="@WeekBefore">&lt;</Button>
@@ -32,7 +32,7 @@
             @foreach (var periodGroup in ThisWeeksPeriods)
             {
                 <Row Id="@periodGroup.Key.ToString(@"hh\:mm")">
-                    <Column>
+                    <Column Class="borderedCol">
                         <p>@periodGroup.Key.ToString(@"hh\:mm")</p>
                     </Column>
 
@@ -43,20 +43,20 @@
 
                         @if (resPeriod != null)
                         {
-                            <Column @onclick="() => OpenPopupForAdministration(resPeriod)">
-                                Id: @resPeriod.Id
+                            <Column @onclick="() => OpenPopupForAdministration(resPeriod)" Class="@(resPeriod.ReservationMade ? "reserved borderedCol" : "available borderedCol")">
+                                <p></p>
                             </Column>
                         }
                         else
                         {
                             @if (IsOwner)
                             {
-                                <Column Class="cellDisabled" @onclick="() => OpenPopupForNewPeriod(periodGroup.Key, indexBuffer)">
+                                <Column Class="cellDisabled borderedCol" @onclick="() => OpenPopupForNewPeriod(periodGroup.Key, indexBuffer)">
                                 </Column>
                             }
                             else
                             {
-                                <Column Class="cellDisabled">
+                                <Column Class="cellDisabled borderedCol">
                                 </Column>
                             }
                         }
@@ -261,7 +261,29 @@
     }
 
     .cellDisabled {
-        background-color: slategrey;
+        background-color: lightgrey;
+    }
+
+    .reserved {
+        background-color: lightcoral;
+    }
+
+    .available {
+        background-color: lightgreen;
+    }
+
+    .borderedCol {
+        border-top: 1px solid grey;
+        border-right: 1px solid grey;
+    }
+
+        .borderedCol:nth-child(1) {
+            border-left: 1px solid grey;
+        }
+
+    .containerBorder {
+        padding: 5px;
+        border: 1px solid grey;
     }
 </style>
 
