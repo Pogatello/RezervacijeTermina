@@ -10,6 +10,8 @@
 @using System.Security.Claims
 @using System.Text;
 @using Pages.Shared.Components
+
+@attribute [Authorize]
 @inject IReservationService ReservationService
 
 @if (IsLoading)
@@ -31,21 +33,21 @@ else
                         <Row>Vlasnik: @ReservationEvent?.User?.UserName</Row>
                         <Row>Kontakt: @ReservationEvent.AdditionalContact</Row>
                         <Row>
-                            Aktivno: Od @ReservationEvent.ActiveFrom.ToString("dd.MM.yyyy") @if (ReservationEvent.ActiveTo != null)
+                            Aktivno Od @ReservationEvent.ActiveFrom.ToString("dd.MM.yyyy") @if (ReservationEvent.ActiveTo != null)
                             {<span> Do @ReservationEvent.ActiveTo.Value.ToString("dd.MM.yyyy") </span>}
                         </Row>
 
                         @if (ReservationEvent.CanUserMakeReservation)
                         {
-                            <Row>Napomena: Korisnik može sam napraviti rezervaciju u nekom od slobodnih termina</Row>
+                            <Row><i class="fas fa-exclamation-triangle" alt="Postoje rezervacije koje nisu potvrđene"></i> Korisnik može sam napraviti rezervaciju u nekom od slobodnih termina</Row>
                             @if (ReservationEvent.IsReservationConfirmationNeeded)
                             {
-                                <Row>Napomena: Vlasnik termina mora potvrditi rezervaciju.</Row>
+                                <Row><i class="fas fa-exclamation-triangle" alt="Postoje rezervacije koje nisu potvrđene"></i> Vlasnik termina mora potvrditi rezervaciju.</Row>
                             }
                         }
                         else
                         {
-                            <Row>Napomena: Potrebno je kontaktirati vlasnika za dogovor rezervacije</Row>
+                            <Row><i class="fas fa-exclamation-triangle" alt="Postoje rezervacije koje nisu potvrđene"></i> Potrebno je kontaktirati vlasnika za dogovor rezervacije</Row>
                         }
                     </Column>
                     <Column>
@@ -89,6 +91,12 @@ else
 }
 
 <style>
+
+    i {
+        margin-right: 5px;
+        line-height: 1.5 !important;
+    }
+
     .imageContainer {
         height: 200px;
     }

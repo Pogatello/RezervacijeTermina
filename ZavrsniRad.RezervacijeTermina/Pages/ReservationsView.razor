@@ -12,6 +12,7 @@
 @using System.Text;
 @using Pages.Shared.Components
 
+@attribute [Authorize]
 @inject IReservationService ReservationService
 @inject NavigationManager NavigationManager
 
@@ -22,6 +23,7 @@
 else
 {
     <Switch TValue="bool" Checked="@FilterReservationsImAttending" CheckedChanged="@OnFilterReservationsImAttending">Prikaži samo rezervacije na kojima sudjelujem</Switch>
+    <br />
     <Container>
         @if (!ReservationEvents.HasElements())
         {
@@ -33,45 +35,48 @@ else
         }
         else
         {
-            @foreach (var reservation in ReservationEvents)
-            {
-                <Row Class="reservationContainer">
-                    <Column>
-                        <Row><Column Class="reservationContainerHeader"><a href="details/@(reservation.Id)">@reservation.Caption</a></Column></Row>
-                        <Row>
-                            <Column Class="reservationContainerBody">
-                                <Row><p>Opis: </p><p>@reservation.Description</p><br /></Row>
-                                <Row>Vlasnik: @reservation?.User?.UserName</Row>
-                                <Row>Kontakt: @reservation.AdditionalContact</Row>
-                                <Row>
-                                    Aktivno: Od @reservation.ActiveFrom.ToString("dd.MM.yyyy") @if (reservation.ActiveTo != null)
-                                    {<span> Do @reservation.ActiveTo.Value.ToString("dd.MM.yyyy") </span>}
-                                </Row>
-
-                                @if (reservation.CanUserMakeReservation)
-                                {
-                                    <Row>Napomena: Korisnik može sam napraviti rezervaciju u nekom od slobodnih termina</Row>
-                                    @if (reservation.IsReservationConfirmationNeeded)
-                                    {
-                                        <Row>Napomena: Vlasnik termina mora potvrditi rezervaciju.</Row>
-                                    }
-                                }
-                                else
-                                {
-                                    <Row>Napomena: Potrebno je kontaktirati vlasnika za dogovor rezervacije</Row>
-                                }
+            <CardDeck>
+                @foreach (var reservation in ReservationEvents)
+                {
+                    <Card>
+                        @if (@reservation.AttachmentLogo != null)
+                        {
+                            <Column Class="imageContainer">
+                                <img src="data:image/png;base64,@reservation.AttachmentLogo.Content" />
                             </Column>
-                            @if (@reservation.AttachmentLogo != null)
-                            {
-                                <Column Class="imageContainer">
-                                    <img src="data:image/png;base64,@reservation.AttachmentLogo.Content" />
-                                </Column>
-                            }
-                        </Row>
-                        <Row><Column Class="reservationContainerFooter"><Button Color="Color.Primary" Clicked="() => NavigateToDetails(reservation.Id)">Detalji</Button></Column></Row>
-                    </Column>
-                </Row>
-            }
+                        }
+                        <CardBody>
+                            <CardTitle Size="5"><a href="details/@(reservation.Id)">@reservation.Caption</a></CardTitle>
+                            <CardText>
+                                <Container>
+                                    <Row>@reservation.Description</Row>
+                                    <br />
+                                    <Row>Kontakt: @reservation?.User?.UserName (@reservation.AdditionalContact)</Row>
+                                    <Row>
+                                        Aktivno: Od @reservation.ActiveFrom.ToString("dd.MM.yyyy") @if (reservation.ActiveTo != null)
+                                        {<span> Do @reservation.ActiveTo.Value.ToString("dd.MM.yyyy") </span>}
+                                    </Row>
+
+                                    @if (reservation.CanUserMakeReservation)
+                                    {
+                                        <Row><i class="fas fa-exclamation-triangle" alt="Postoje rezervacije koje nisu potvrđene"></i> Korisnik može sam napraviti rezervaciju u nekom od slobodnih termina</Row>
+                                        @if (reservation.IsReservationConfirmationNeeded)
+                                        {
+                                            <Row><i class="fas fa-exclamation-triangle" alt="Postoje rezervacije koje nisu potvrđene"></i> Vlasnik termina mora potvrditi rezervaciju.</Row>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <Row><i class="fas fa-exclamation-triangle" alt="Postoje rezervacije koje nisu potvrđene"></i> Potrebno je kontaktirati vlasnika za dogovor rezervacije</Row>
+                                    }
+                                </Container>
+                            </CardText>
+                            <br />
+                            <Button Color="Color.Primary" Clicked="() => NavigateToDetails(reservation.Id)">Detalji</Button>
+                        </CardBody>
+                    </Card>
+                }
+            </CardDeck>
         }
     </Container>
 
@@ -101,6 +106,11 @@ else
 
 <style>
 
+    i {
+        margin-right: 5px;
+        line-height: 1.5 !important;
+    }
+
     .noReservations {
         margin-top: 100px;
         font-weight: bold;
@@ -112,24 +122,21 @@ else
         margin: 50px 0px;
     }
 
-    .reservationContainerHeader {
-        border-bottom: 2px solid black;
-        margin-bottom: 5px;
+    CardTitle a {
+        font-size: 18px;
+        padding: 10px 0px;
+        display: inline-block
     }
-
-        .reservationContainerHeader a {
-            font-size: 18px;
-            padding: 10px 0px;
-            display: inline-block
-        }
 
     .imageContainer {
         height: 300px;
+        text-align: center;
     }
 
         .imageContainer img {
             max-width: 100%;
             max-height: 100%;
+            margin: auto;
         }
 
     .reservationContainerBody {

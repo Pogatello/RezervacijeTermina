@@ -12,6 +12,7 @@
 @using System.Text;
 @using Pages.Shared.Components
 
+@attribute [Authorize]
 @inject IReservationService ReservationService
 @inject NavigationManager NavigationManager
 
@@ -107,6 +108,10 @@ else
 }
 
 <style>
+    i {
+        margin-right: 5px;
+        line-height: 1.5 !important;
+    }
 
     .noReservations {
         margin-top: 100px;
