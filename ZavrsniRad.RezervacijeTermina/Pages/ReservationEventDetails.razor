@@ -21,45 +21,42 @@
 else
 {
     <Card Margin="Margin.Is4.OnY">
-
         <CardBody>
             <CardTitle Size="5">@ReservationEvent.Caption</CardTitle>
             <br />
             <CardText>
+                <Container>
+                    <Row>
+                        <Column>
+                            <Row>@ReservationEvent.Description</Row>
+                            <br />
+                            <Row>Kontakt: @ReservationEvent?.User?.UserName (@ReservationEvent.AdditionalContact)</Row>
+                            <Row>
+                                Aktivno: Od @ReservationEvent.ActiveFrom.ToString("dd.MM.yyyy") @if (ReservationEvent.ActiveTo != null)
+                                {<span> Do @ReservationEvent.ActiveTo.Value.ToString("dd.MM.yyyy") </span>}
+                            </Row>
 
-                <Row>
-                    <Column>
-                        <Row><p>Opis: </p><p>@ReservationEvent.Description</p><br /></Row>
-                        <Row>Vlasnik: @ReservationEvent?.User?.UserName</Row>
-                        <Row>Kontakt: @ReservationEvent.AdditionalContact</Row>
-                        <Row>
-                            Aktivno Od @ReservationEvent.ActiveFrom.ToString("dd.MM.yyyy") @if (ReservationEvent.ActiveTo != null)
-                            {<span> Do @ReservationEvent.ActiveTo.Value.ToString("dd.MM.yyyy") </span>}
-                        </Row>
-
-                        @if (ReservationEvent.CanUserMakeReservation)
-                        {
-                            <Row><i class="fas fa-exclamation-triangle" alt="Postoje rezervacije koje nisu potvrđene"></i> Korisnik može sam napraviti rezervaciju u nekom od slobodnih termina</Row>
-                            @if (ReservationEvent.IsReservationConfirmationNeeded)
+                            @if (ReservationEvent.CanUserMakeReservation)
                             {
-                                <Row><i class="fas fa-exclamation-triangle" alt="Postoje rezervacije koje nisu potvrđene"></i> Vlasnik termina mora potvrditi rezervaciju.</Row>
+                                <Row><i class="fas fa-exclamation-triangle"></i> Korisnik može sam napraviti rezervaciju u nekom od slobodnih termina</Row>
+                                @if (ReservationEvent.IsReservationConfirmationNeeded)
+                                {
+                                    <Row><i class="fas fa-exclamation-triangle"></i> Vlasnik termina mora potvrditi rezervaciju.</Row>
+                                }
                             }
-                        }
-                        else
-                        {
-                            <Row><i class="fas fa-exclamation-triangle" alt="Postoje rezervacije koje nisu potvrđene"></i> Potrebno je kontaktirati vlasnika za dogovor rezervacije</Row>
-                        }
-                    </Column>
-                    <Column>
+                            else
+                            {
+                                <Row><i class="fas fa-exclamation-triangle"></i> Potrebno je kontaktirati vlasnika za dogovor rezervacije</Row>
+                            }
+                        </Column>
                         @if (ReservationEvent.AttachmentLogo != null)
                         {
                             <Column Class="imageContainer">
                                 <img src="data:image/png;base64,@ReservationEvent.AttachmentLogo.Content" />
                             </Column>
                         }
-                    </Column>
-                </Row>
-
+                    </Row>
+                </Container>
                 <br />
                 <CalendarScheduler ReservationEvent=@ReservationEvent IsOwner=@IsOwner UserId=@UserId UserName=@UserName></CalendarScheduler>
             </CardText>
