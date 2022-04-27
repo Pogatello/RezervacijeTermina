@@ -14,45 +14,44 @@
 
 <AuthorizeView>
     <Authorized Context="Auth">
-        <h3>CreateReservationEvent</h3>
+        <h3>Kreiraj novi termin</h3>
 
         <EditForm Model="reservation" OnValidSubmit="@CreateReservationEventAsync">
-            <h5>Reservation</h5>
             <div class="row">
                 <div class="col form-group">
-                    <label>Caption: </label>
+                    <label>Naslov: </label>
                     <TextEdit Text="@reservation.Caption" TextChanged="@OnCaptionChanged"></TextEdit>
                 </div>
 
                 <div class="col form-group">
-                    <label>Description: </label>
+                    <label>Opis: </label>
                     <TextEdit Text="@reservation.Description" TextChanged="@OnDescriptionChanged"></TextEdit>
                 </div>
 
                 <div class="col">
-                    <label>AdditionalContactData: </label>
+                    <label>Dodatne kontakt informacije: </label>
                     <TextEdit Text="@reservation.AdditionalContact" TextChanged="@OnAdditionalContactChanged"></TextEdit>
                 </div>
             </div>
             <br />
             <div class="row">
                 <div class="col form-group">
-                    <Switch TValue="bool" Checked="@reservation.CanUserMakeReservation" CheckedChanged="@OnCanUserMakeReservationChanged">CanUserMakeReservation</Switch>
+                    <Switch TValue="bool" Checked="@reservation.CanUserMakeReservation" CheckedChanged="@OnCanUserMakeReservationChanged">Korisnik može napraviti rezervaciju</Switch>
                 </div>
 
                 <div class="col form-group">
-                    <Switch TValue="bool" Checked="@reservation.IsReservationConfirmationNeeded" CheckedChanged="@OnIsReservationConfirmationNeededChanged">IsReservationConfirmationNeeded</Switch>
+                    <Switch TValue="bool" Checked="@reservation.IsReservationConfirmationNeeded" CheckedChanged="@OnIsReservationConfirmationNeededChanged">Potrebna potvrda rezervacije</Switch>
                 </div>
             </div>
             <br />
             <div class="row">
                 <div class="col form-group">
-                    <label>ActiveFrom: </label>
+                    <label>Aktivno Od: </label>
                     <DateEdit TValue="DateTime" Date="@reservation.ActiveFrom" DateChanged="@OnActiveFromChanged"></DateEdit>
                 </div>
 
                 <div class="col form-group">
-                    <label>ActiveTo: </label>
+                    <label>Aktivno Do: </label>
                     <DateEdit TValue="DateTime?" Date="@reservation.ActiveTo" DateChanged="@OnActiveToChanged"></DateEdit>
                 </div>
             </div>
@@ -60,7 +59,7 @@
             <div class="row">
 
                 <div class="col form-group">
-                    <label> ReservationDurationType</label>
+                    <label> Trajanje jedne rezervacije</label>
                     <Select TValue="int" SelectedValue="@((int)reservation.ReservationDurationType)" SelectedValueChanged="@OnSelectedValueChangedReservationDurationType">
                         @foreach (var val in Enum.GetValues(typeof(ReservationDurationType)))
                         {
@@ -81,22 +80,23 @@
             <br />
             @if (reservation.ReservationDurationType != ReservationDurationType.Undefined)
             {
-                <p> Every reservation is currently lasting one hour. Set working hours per each day. Times will be preset one month in the future. Exception can be put in manually in a calendar at the next screen.</p>
+                <p> Svaka rezervacija traje 1 sat. Postaviti generalno radno vrijeme za svaki dan. Na idućem ekranu moguće je podesiti iznimke.
+                </p>
 
                 <div class="row">
                     @foreach (var day in DaysWithWorkingTime)
                     {
                         <div class="col form-group">
                             <label>@day.Day </label><br />
-                            Working From <TimePicker TValue="TimeSpan?" Time="day.WorkingFrom" TimeAs24hr="true" TimeChanged="(input) => OnChangedWorkingFrom(day, input)" />
-                            Working To <TimePicker TValue="TimeSpan?" Time="day.WorkingTo" TimeAs24hr="true" TimeChanged="(input) => OnChangedWorkingTo(day, input)" />
+                            Od: <TimePicker TValue="TimeSpan?" Time="day.WorkingFrom" TimeAs24hr="true" TimeChanged="(input) => OnChangedWorkingFrom(day, input)" />
+                            Do: <TimePicker TValue="TimeSpan?" Time="day.WorkingTo" TimeAs24hr="true" TimeChanged="(input) => OnChangedWorkingTo(day, input)" />
                         </div>
                     }
                 </div>
             }
 
             <br />
-            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="submit" class="btn btn-primary">Spremi</button>
         </EditForm>
 
         @if (showPopup)

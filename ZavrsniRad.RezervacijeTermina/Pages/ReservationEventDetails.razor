@@ -35,7 +35,7 @@ else
                                 Aktivno: Od @ReservationEvent.ActiveFrom.ToString("dd.MM.yyyy") @if (ReservationEvent.ActiveTo != null)
                                 {<span> Do @ReservationEvent.ActiveTo.Value.ToString("dd.MM.yyyy") </span>}
                             </Row>
-
+                            <br/>
                             @if (ReservationEvent.CanUserMakeReservation)
                             {
                                 <Row><i class="fas fa-exclamation-triangle"></i> Korisnik može sam napraviti rezervaciju u nekom od slobodnih termina</Row>
@@ -51,8 +51,8 @@ else
                         </Column>
                         @if (ReservationEvent.AttachmentLogo != null)
                         {
-                            <Column Class="imageContainer">
-                                <img src="data:image/png;base64,@ReservationEvent.AttachmentLogo.Content" />
+                            <Column>
+                                <img src="data:image/png;base64,@ReservationEvent.AttachmentLogo.Content" class="centerI" />
                             </Column>
                         }
                     </Row>
@@ -96,6 +96,13 @@ else
 
     .imageContainer {
         height: 200px;
+    }
+
+    .centerI {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      max-height:250px;
     }
 
         .imageContainer img {

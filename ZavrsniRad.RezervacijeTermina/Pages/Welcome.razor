@@ -8,14 +8,32 @@
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
 
-<img src="/images/mainLogo.png" height="600" />
+<div class="cont">
+    <img src="/images/logo.jpg" class="center"/>
+</div>
 <br />
 
-<p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum</p>
-<br />
+<div class="wrapper">
+    <a class="mainButton" href="/Identity/Account/Login" ReturnUrl="/index"><h1>KRENI</h1></a>
+</div>
 
-<a href="/Identity/Account/Login" ReturnUrl="/index">Kreni</a>
+<style>
+    main{
+        padding: 0px;
+    }
 
+    .center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      width: 100%;
+    }
+
+     .wrapper {
+      display: flex;
+      justify-content: center;
+    }
+</style>
 @code{
     [Parameter]
     public string ReturnUrl { get; set; }
