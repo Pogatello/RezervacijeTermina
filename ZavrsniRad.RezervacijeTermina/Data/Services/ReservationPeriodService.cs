@@ -58,6 +58,7 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Services
 			var response = new UpdateReservationPeriodResponse();
 			try
 			{
+				request.ReservationPeriod.SetUserId(request.UserId);
 				if (request.ReservationPeriod.IsForClosing())
 				{
 					await _reservationRepository.DeleteReservationPeriodAsync(request.ReservationPeriod);

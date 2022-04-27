@@ -365,6 +365,7 @@ using Data.Messaging.ReservationPeriod.Request;
         if (response.Success)
         {
             HideEditModal();
+            this.StateHasChanged();
         }
         else
         {

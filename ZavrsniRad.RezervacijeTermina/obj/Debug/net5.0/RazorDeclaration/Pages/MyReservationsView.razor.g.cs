@@ -174,7 +174,7 @@ using Pages.Shared.Components;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 156 "C:\Users\Marko\source\repos\ZavrsniRad.RezervacijeTermina\ZavrsniRad.RezervacijeTermina\Pages\MyReservationsView.razor"
+#line 157 "C:\Users\Marko\source\repos\ZavrsniRad.RezervacijeTermina\ZavrsniRad.RezervacijeTermina\Pages\MyReservationsView.razor"
        
 
     [CascadingParameter]

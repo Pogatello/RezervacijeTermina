@@ -87,6 +87,11 @@ namespace ZavrsniRad.RezervacijeTermina.Data.Models
 			return ReservationPeriodType == ReservationPeriodType.Closed;
 		}
 
+		public void SetUserId(string userId)
+        {
+			UserId = userId;
+        }
+
 		public void ResetUser()
 		{
 			//used for cancleing reservations

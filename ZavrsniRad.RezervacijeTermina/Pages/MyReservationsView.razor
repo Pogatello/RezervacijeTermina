@@ -55,7 +55,8 @@ else
                                     Aktivno: Od @reservation.ActiveFrom.ToString("dd.MM.yyyy") @if (reservation.ActiveTo != null)
                                     {<span> Do @reservation.ActiveTo.Value.ToString("dd.MM.yyyy") </span>}
                                 </Row>
-
+                                <br/>
+                                <br/>
                                 @if (reservation.CanUserMakeReservation)
                                 {
                                     <Row>Napomena: Korisnik može sam napraviti rezervaciju u nekom od slobodnih termina</Row>

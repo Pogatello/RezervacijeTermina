@@ -167,7 +167,7 @@ using Pages.Shared.Components;
         }
         #pragma warning restore 1998
 #nullable restore
-#line 114 "C:\Users\Marko\source\repos\ZavrsniRad.RezervacijeTermina\ZavrsniRad.RezervacijeTermina\Pages\ReservationEventDetails.razor"
+#line 115 "C:\Users\Marko\source\repos\ZavrsniRad.RezervacijeTermina\ZavrsniRad.RezervacijeTermina\Pages\ReservationEventDetails.razor"
        
     [Parameter]
     public string Id { get; set; }
